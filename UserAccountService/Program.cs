@@ -13,6 +13,8 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        Console.WriteLine("Hello World");
+
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddScoped<IUserRepository, UserRepository>();
