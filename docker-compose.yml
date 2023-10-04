@@ -1,0 +1,43 @@
+version: '3.8'
+
+networks:
+  friends:
+    external: false
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_user_accounts
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: user_accounts_database
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql   # Mount our SQL script
+    ports:
+      - "3307:3306"
+    networks:
+      - friends
+
+  grpc-user-service:
+    build:
+      context: ./GrpcUserService   # Replace with the actual path to your GrpcUserService project
+      dockerfile: Dockerfile              # Use the Dockerfile for your GrpcUserService
+    container_name: grpc_user_service
+    ports:
+      - "8080:80"
+    networks:
+      - friends
+
+  user-account-service-api:
+    build:
+      context: ./UserAccountService   # Replace with the actual path to your UserAccountService project
+      dockerfile: Dockerfile                # Use the Dockerfile for your UserAccountService
+    container_name: user_api
+    ports:
+      - "8000:80"
+    networks:
+      - friends
+
+volumes:
+  mysql_data:

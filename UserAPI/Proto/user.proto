@@ -1,0 +1,58 @@
+﻿syntax = "proto3";
+
+package user;
+
+// User registration request message
+message RegisterUserRequest {
+  string Email = 1;
+  string Password = 2;
+}
+
+// User registration response message
+message RegisterUserResponse {
+  string Token = 1;
+}
+
+// User login request message
+message LoginRequest {
+  string Email = 1;
+  string Password = 2;
+}
+
+// User login response message
+message LoginResponse {
+  string Token = 1;
+}
+
+// Token validation request message
+message ValidateTokenRequest {}
+
+// Token validation response message
+message ValidateTokenResponse {}
+
+// Password reset request message
+message ResetPasswordRequest {
+  string Email = 1;
+}
+
+// Password reset response message
+message ResetPasswordResponse {}
+
+// Password reset action request message
+message PerformResetPasswordRequest {
+  string Email = 1;
+  string Token = 2;
+  string NewPassword = 3;
+}
+
+// Password reset action response message
+message PerformResetPasswordResponse {}
+
+// User API service definition
+service UserService {
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc PerformResetPassword(PerformResetPasswordRequest) returns (PerformResetPasswordResponse);
+}
