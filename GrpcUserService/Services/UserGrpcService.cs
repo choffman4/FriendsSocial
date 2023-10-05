@@ -12,6 +12,9 @@ using System.Text;
 using Org.BouncyCastle.Crypto.Generators;
 using BCrypt.Net;
 using System.Data;
+using Confluent.Kafka;
+using Microsoft.Extensions.Options;
+using GrpcUserService.Kafka;
 
 namespace GrpcUserService.Services
 {
@@ -19,11 +22,18 @@ namespace GrpcUserService.Services
     {
         private readonly ILogger<UserGrpcService> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IProducer<string, string> _kafkaProducer;
 
-        public UserGrpcService(ILogger<UserGrpcService> logger, IConfiguration configuration)
+
+        public UserGrpcService(ILogger<UserGrpcService> logger, IConfiguration configuration, IOptions<KafkaSettings> kafkaSettings)
         {
             _logger = logger;
             _configuration = configuration;
+            var producerConfig = new ProducerConfig
+            {
+                BootstrapServers = kafkaSettings.Value.BootstrapServers
+            };
+            _kafkaProducer = new ProducerBuilder<string, string>(producerConfig).Build();
         }
 
         public async override Task<RegisterUserResponse> RegisterUser(RegisterUserRequest request, ServerCallContext context)
@@ -59,6 +69,11 @@ namespace GrpcUserService.Services
                 cmd.Parameters.AddWithValue("@PasswordHash", hashedPassword); // Store the hashed password
 
                 await cmd.ExecuteNonQueryAsync();
+
+                // Sending userId to the "RegisterUser" topic in Kafka
+                await _kafkaProducer.ProduceAsync("RegisterUser", new Message<string, string> { Key = userId, Value = userId });
+
+
                 await connection.CloseAsync();
 
                 var jwtToken = GenerateJwtToken(userId);

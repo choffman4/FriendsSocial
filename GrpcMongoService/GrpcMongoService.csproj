@@ -7,22 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Protos\profile.proto" />
+    <Protobuf Include="Protos\profile.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-	<PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
+    <PackageReference Include="Confluent.Kafka" Version="2.2.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.21.0" />
   </ItemGroup>
-
-	<ItemGroup>
-		<Protobuf Include="Protos\profile.proto" GrpcServices="Server" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Protos\" />
-	</ItemGroup>
-
 
 </Project>

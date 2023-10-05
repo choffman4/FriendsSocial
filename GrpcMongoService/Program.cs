@@ -1,3 +1,6 @@
+using GrpcMongoService.Kafka;
+using GrpcMongoService.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace GrpcMongoService
 {
@@ -7,30 +10,23 @@ namespace GrpcMongoService
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Additional configuration is required to successfully run gRPC on macOS.
+            // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            // Configure the services here
+            builder.Services.AddGrpc();
+            builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
+            builder.Services.AddHostedService<KafkaConsumerService>();
+            // other service configurations...
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
+            app.MapGrpcService<ProfileGrpcService>();
+            app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
             app.Run();
         }
+
     }
 }

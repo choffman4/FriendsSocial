@@ -18,17 +18,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserAccountService", "UserA
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OcelotGateway", "OcelotGateway\OcelotGateway.csproj", "{D58286E6-A85E-48E2-A2A9-9D1B5C145863}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProfileService", "ProfileService\ProfileService.csproj", "{7F94FFC3-F366-4BF0-A395-26BC6B8DE5DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProfileService", "ProfileService\ProfileService.csproj", "{7F94FFC3-F366-4BF0-A395-26BC6B8DE5DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcMongoService", "GrpcMongoService\GrpcMongoService.csproj", "{6F0946E2-EC7A-4985-B81B-49C27CD53A40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PostingService", "PostingService\PostingService.csproj", "{E04AC984-E432-4404-B84E-EA1EF9221943}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostingService", "PostingService\PostingService.csproj", "{E04AC984-E432-4404-B84E-EA1EF9221943}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessagingService", "MessagingService\MessagingService.csproj", "{258A5A9E-1D9E-4402-8173-2BA9F3968201}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessagingService", "MessagingService\MessagingService.csproj", "{258A5A9E-1D9E-4402-8173-2BA9F3968201}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserFriendsService", "UserFriendsService\UserFriendsService.csproj", "{51E6E8E2-A05B-446C-BCC9-4DBE31EB636C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserFriendsService", "UserFriendsService\UserFriendsService.csproj", "{51E6E8E2-A05B-446C-BCC9-4DBE31EB636C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotificationService", "NotificationService\NotificationService.csproj", "{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService", "NotificationService\NotificationService.csproj", "{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcMongoService", "GrpcMongoService\GrpcMongoService.csproj", "{BE70B08C-70CA-46F7-91D7-E61536B12403}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,10 +58,6 @@ Global
 		{7F94FFC3-F366-4BF0-A395-26BC6B8DE5DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F94FFC3-F366-4BF0-A395-26BC6B8DE5DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F94FFC3-F366-4BF0-A395-26BC6B8DE5DE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F0946E2-EC7A-4985-B81B-49C27CD53A40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F0946E2-EC7A-4985-B81B-49C27CD53A40}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F0946E2-EC7A-4985-B81B-49C27CD53A40}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F0946E2-EC7A-4985-B81B-49C27CD53A40}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E04AC984-E432-4404-B84E-EA1EF9221943}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E04AC984-E432-4404-B84E-EA1EF9221943}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E04AC984-E432-4404-B84E-EA1EF9221943}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -78,6 +74,10 @@ Global
 		{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

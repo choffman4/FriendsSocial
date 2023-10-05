@@ -1,1 +1,34 @@
-﻿
+syntax = "proto3";
+
+option csharp_namespace = "GrpcMongoService";
+
+package profile;
+
+
+service ProfileService {
+	// Sends a greeting
+	 rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
+	 rpc GetProfile (GetProfileRequest) returns (GetProfileResponse);
+}
+
+message UpdateProfileRequest {
+	string Guid = 1;
+	string First_Name = 2;
+	string Last_Name = 3;
+	string Bio = 4;
+}
+
+message UpdateProfileResponse {
+	string message = 1;
+}
+
+message GetProfileRequest {
+	string Guid = 1;
+}
+
+message GetProfileResponse {
+	string First_Name = 1;
+	string Last_Name = 2;
+	string Bio = 3;
+}
+
