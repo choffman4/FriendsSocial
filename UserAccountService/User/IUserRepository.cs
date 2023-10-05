@@ -12,10 +12,10 @@ public interface IUserRepository
     // Method for token validation
     Task<ValidateTokenResponse> ValidateTokenAsync();
 
-    // Method to request a password reset
-    Task<ResetPasswordResponse> RequestPasswordResetAsync(string email);
+    // Method to password reset
+    Task<ResetPasswordResponse> ResetPasswordAsync(string email, string password, string newpassword);
 
-    // Method to perform the actual password reset
-    Task<PerformResetPasswordResponse> ResetPasswordAsync(string email, string token, string newPassword);
+    // Method to check if a user exists by email
+    Task<UserExistsResponse> UserExistsByEmailAsync(string email);
 }
 

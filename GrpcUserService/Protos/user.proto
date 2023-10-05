@@ -34,21 +34,25 @@ message ValidateTokenResponse {}
 
 // Password reset request message
 message ResetPasswordRequest {
-  string Email = 1;
+    string email = 1;                 // The email of the user wanting to change their password.
+    string current_password = 2;     // The user's current password.
+    string new_password = 3;         // The desired new password.
 }
 
 // Password reset response message
-message ResetPasswordResponse {}
-
-// Password reset action request message
-message PerformResetPasswordRequest {
-  string Email = 1;
-  string Token = 2;
-  string NewPassword = 3;
+message ResetPasswordResponse {
+    string message = 1;  // Response message indicating the status of the password reset.
 }
 
-// Password reset action response message
-message PerformResetPasswordResponse {}
+// Message to request user existence by email
+message UserExistsRequest {
+  string Email = 1;
+}
+
+// Response message for user existence check
+message UserExistsResponse {
+  bool Exists = 1;
+}
 
 // User API service definition
 service UserService {
@@ -56,5 +60,5 @@ service UserService {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
   rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
-  rpc PerformResetPassword(PerformResetPasswordRequest) returns (PerformResetPasswordResponse);
+  rpc UserExistsByEmail(UserExistsRequest) returns (UserExistsResponse);
 }

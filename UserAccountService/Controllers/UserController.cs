@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Grpc.Core;
 using GrpcUserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,7 @@ namespace UserAccountService.Controllers
 
             var response = await _userRepository.RegisterUserAsync(request.Email, request.Password);
 
-            if (response != null)
+            if (!string.IsNullOrEmpty(response?.Token))
             {
                 return Ok(response);
             } else
@@ -79,7 +80,7 @@ namespace UserAccountService.Controllers
             }
         }
 
-        [HttpPost("reset-password/request")]
+        [HttpPost("reset-password")]
         public async Task<IActionResult> RequestPasswordResetAsync([FromBody] ResetPasswordRequest request)
         {
             if (request == null)
@@ -87,33 +88,39 @@ namespace UserAccountService.Controllers
                 return BadRequest("Invalid request format");
             }
 
-            var response = await _userRepository.RequestPasswordResetAsync(request.Email);
+            try
+            {
+                var response = await _userRepository.ResetPasswordAsync(request.Email, request.CurrentPassword, request.NewPassword);
 
-            if (response != null)
-            {
                 return Ok(response);
-            } else
+            } catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
             {
-                return BadRequest("Password reset request failed");
+                return NotFound(ex.Status.Detail);
+            } catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Unauthenticated)
+            {
+                return Unauthorized(ex.Status.Detail);
+            } catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error occurred during password change");
             }
         }
 
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPasswordAsync([FromBody] PerformResetPasswordRequest request)
+        [HttpGet("exists/{email}")]
+        public async Task<IActionResult> UserExistsByEmailAsync([FromRoute] string email)
         {
-            if (request == null)
+            if (string.IsNullOrEmpty(email))
             {
-                return BadRequest("Invalid request format");
+                return BadRequest("Invalid email");
             }
 
-            var response = await _userRepository.ResetPasswordAsync(request.Email, request.Token, request.NewPassword);
+            var response = await _userRepository.UserExistsByEmailAsync(email);
 
-            if (response != null)
+            if (response != null && response.Exists) // Assuming `UserExistsResponse` has a boolean property called `Exists`.
             {
-                return Ok(response);
+                return Ok(new { Exists = true });
             } else
             {
-                return BadRequest("Password reset failed");
+                return Ok(new { Exists = false });
             }
         }
     }

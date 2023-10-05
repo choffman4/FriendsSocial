@@ -34,10 +34,39 @@ services:
     networks:
       - friends
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    restart: always
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2182
+      - ZOOKEEPER_TICK_TIME=2000
+    networks:
+      - friends
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    networks:
+      - friends
+    depends_on:
+      - zookeeper
+    restart: always
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2182
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:9092,PLAINTEXT_INTERNAL://broker:29092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+
   grpc-user-service:
     build:
-      context: ./GrpcUserService   # Replace with the actual path to your GrpcUserService project
-      dockerfile: Dockerfile              # Use the Dockerfile for your GrpcUserService
+      context: ./GrpcUserService
+      dockerfile: Dockerfile
     container_name: grpc_user_service
     ports:
       - "8080:80"
@@ -46,8 +75,8 @@ services:
 
   user-account-service-api:
     build:
-      context: ./UserAccountService   # Replace with the actual path to your UserAccountService project
-      dockerfile: Dockerfile                # Use the Dockerfile for your UserAccountService
+      context: ./UserAccountService
+      dockerfile: Dockerfile
     container_name: user_account_service_api
     ports:
       - "8000:80"

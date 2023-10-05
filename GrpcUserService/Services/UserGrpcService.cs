@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using Org.BouncyCastle.Crypto.Generators;
 using BCrypt.Net;
+using System.Data;
 
 namespace GrpcUserService.Services
 {
@@ -29,99 +30,229 @@ namespace GrpcUserService.Services
         {
             string connectionString = _configuration.GetConnectionString("DefaultConnection");
             using MySqlConnection connection = new MySqlConnection(connectionString);
-
-            //// Check if email exists
-            string checkEmailQuery = "SELECT COUNT(1) FROM UserAccounts WHERE Email = @Email";
-            MySqlCommand cmd = new MySqlCommand(checkEmailQuery, connection);
-            cmd.Parameters.AddWithValue("@Email", request.Email);
-
             await connection.OpenAsync();
 
-            var count = (long)await cmd.ExecuteScalarAsync();
-            if (count > 0)
+            try
             {
-                throw new RpcException(new Status(StatusCode.AlreadyExists, "Email already exists."));
+                // Check if email exists
+                string checkEmailQuery = "SELECT COUNT(1) FROM UserAccounts WHERE Email = @Email";
+                MySqlCommand cmd = new MySqlCommand(checkEmailQuery, connection);
+                cmd.Parameters.AddWithValue("@Email", request.Email);
+
+                var count = (long)await cmd.ExecuteScalarAsync();
+                if (count > 0)
+                {
+                    throw new RpcException(new Status(StatusCode.AlreadyExists, "Email already exists."));
+                }
+
+                // Generate a new GUID for the user
+                string userId = Guid.NewGuid().ToString();
+
+                // Hash the password using BCrypt
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                string insertQuery = "INSERT INTO UserAccounts (UserId, Email, PasswordHash) VALUES (@UserId, @Email, @PasswordHash);";
+                cmd.CommandText = insertQuery;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                cmd.Parameters.AddWithValue("@Email", request.Email);
+                cmd.Parameters.AddWithValue("@PasswordHash", hashedPassword); // Store the hashed password
+
+                await cmd.ExecuteNonQueryAsync();
+                await connection.CloseAsync();
+
+                var jwtToken = GenerateJwtToken(userId);
+                return new RegisterUserResponse { Token = jwtToken };
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during user registration");
+                throw new RpcException(new Status(StatusCode.Internal, "Internal server error occurred during registration"));
             }
-
-            // Generate a new GUID for the user
-            string userId = Guid.NewGuid().ToString();
-
-            // Hash the password using BCrypt
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            string insertQuery = "INSERT INTO UserAccounts (UserId, Email, PasswordHash) VALUES (@UserId, @Email, @PasswordHash);";
-            cmd.CommandText = insertQuery;
-            cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@UserId", userId);
-            cmd.Parameters.AddWithValue("@Email", request.Email);
-            cmd.Parameters.AddWithValue("@PasswordHash", hashedPassword); // Store the hashed password
-
-            await cmd.ExecuteNonQueryAsync();
-
-            var jwtToken = GenerateJwtToken(userId);
-            var response = new RegisterUserResponse { Token = jwtToken };
-            return response;
         }
 
-        public override Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
+        public async override Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
         {
-            // Your logic to login a user goes here.
-            // For now, let's return a dummy token.
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+            using MySqlConnection connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
 
-            var response = new LoginResponse { Token = "dummy-token" };
-            return Task.FromResult(response);
+            try
+            {
+                // Retrieve user by email
+                string getUserQuery = "SELECT UserId, PasswordHash FROM UserAccounts WHERE Email = @Email";
+                MySqlCommand cmd = new MySqlCommand(getUserQuery, connection);
+                cmd.Parameters.AddWithValue("@Email", request.Email);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                if (!reader.HasRows)
+                {
+                    throw new RpcException(new Status(StatusCode.NotFound, "User not found."));
+                }
+
+                await reader.ReadAsync();
+                string userId = reader.GetString("UserId");
+                string storedHash = reader.GetString("PasswordHash");
+
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, storedHash))
+                {
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid password."));
+                }
+
+                var jwtToken = GenerateJwtToken(userId);
+                return new LoginResponse { Token = jwtToken };
+            } catch (RpcException)
+            {
+                // Re-throw any RPC exceptions that we explicitly created
+                throw;
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during user login");
+                throw new RpcException(new Status(StatusCode.Internal, "Internal server error occurred during login"));
+            } finally
+            {
+                await connection.CloseAsync();
+            }
         }
 
         public override Task<ValidateTokenResponse> ValidateToken(ValidateTokenRequest request, ServerCallContext context)
         {
-            // Your logic to validate a user's token goes here.
-            // For now, let's return an empty response.
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
 
-            var response = new ValidateTokenResponse();
-            return Task.FromResult(response);
-        }
-
-        public override Task<ResetPasswordResponse> ResetPassword(ResetPasswordRequest request, ServerCallContext context)
-        {
-            // Your logic to request password reset goes here.
-            // For now, let's return an empty response.
-
-            var response = new ResetPasswordResponse();
-            return Task.FromResult(response);
-        }
-
-        public override Task<PerformResetPasswordResponse> PerformResetPassword(PerformResetPasswordRequest request, ServerCallContext context)
-        {
-            // Your logic to actually reset the password after the user has gotten a reset token goes here.
-            // For now, let's return an empty response.
-
-            var response = new PerformResetPasswordResponse();
-            return Task.FromResult(response);
-        }
-
-        private string GenerateJwtToken(string guid)
-        {
-            Console.WriteLine($"_configuration is null: {_configuration == null}"); // replace with your logging mechanism
-            Console.WriteLine($"guid: {guid}");
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new List<Claim>
+            // Retrieve the token from the gRPC metadata
+            var metadata = context.RequestHeaders;
+            var tokenEntry = metadata.FirstOrDefault(m => m.Key == "authorization");
+            if (tokenEntry == null)
             {
-                new Claim(JwtRegisteredClaimNames.Sub, guid), // Replace 'user_email_or_id' with your user's email or ID
-                // Add other claims as needed
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Token is missing from headers."));
+            }
+
+            var token = tokenEntry.Value;
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Token is missing or empty."));
+            }
+
+            try
+            {
+                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                // This will throw if the token is invalid
+                jwtTokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+
+                return Task.FromResult(new ValidateTokenResponse()); // Return an empty response for a valid token
+            } catch (SecurityTokenException)
+            {
+                // Token is invalid
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid or expired token."));
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during token validation");
+                throw new RpcException(new Status(StatusCode.Internal, "Internal server error occurred during token validation"));
+            }
+        }
+
+        public async override Task<ResetPasswordResponse> ResetPassword(ResetPasswordRequest request, ServerCallContext context)
+        {
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+            using MySqlConnection connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            try
+            {
+                // Fetch the hashed password from the database using the Email
+                string fetchPasswordQuery = "SELECT PasswordHash FROM UserAccounts WHERE Email = @Email";
+                MySqlCommand cmd = new MySqlCommand(fetchPasswordQuery, connection);
+                cmd.Parameters.AddWithValue("@Email", request.Email);
+
+                var storedHashedPassword = (string?)await cmd.ExecuteScalarAsync();
+
+                if (storedHashedPassword == null)
+                {
+                    throw new RpcException(new Status(StatusCode.NotFound, "User not found."));
+                }
+
+                // Check if the current password provided by the user matches the stored hashed password
+                bool isValidPassword = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, storedHashedPassword);
+
+                if (!isValidPassword)
+                {
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Current password is incorrect."));
+                }
+
+                // Hash the new password and update the record in the database
+                string newHashedPassword = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+                string updatePasswordQuery = "UPDATE UserAccounts SET PasswordHash = @NewPasswordHash WHERE Email = @Email;";
+                cmd.CommandText = updatePasswordQuery;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@Email", request.Email);
+                cmd.Parameters.AddWithValue("@NewPasswordHash", newHashedPassword);
+
+                await cmd.ExecuteNonQueryAsync();
+
+                var response = new ResetPasswordResponse { Message = "Password has been successfully updated." };
+                return response;
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during password reset");
+                throw new RpcException(new Status(StatusCode.Internal, "Internal server error occurred during password reset"));
+            }
+        }
+
+        public async override Task<UserExistsResponse> UserExistsByEmail(UserExistsRequest request, ServerCallContext context)
+        {
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+            using MySqlConnection connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            try
+            {
+                // Check if email exists
+                string checkEmailQuery = "SELECT COUNT(1) FROM UserAccounts WHERE Email = @Email";
+                MySqlCommand cmd = new MySqlCommand(checkEmailQuery, connection);
+                cmd.Parameters.AddWithValue("@Email", request.Email);
+
+                var count = (long)await cmd.ExecuteScalarAsync();
+                await connection.CloseAsync();
+
+                var exists = count > 0;  // Convert count to a boolean value
+
+                return new UserExistsResponse { Exists = exists };
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during email existence check");
+                throw new RpcException(new Status(StatusCode.Internal, "Internal server error occurred during email check"));
+            }
+        }
+
+        private string GenerateJwtToken(string userId)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+            new Claim(ClaimTypes.NameIdentifier, userId)
+            // Add other claims as needed
+        }),
+                Expires = DateTime.UtcNow.AddHours(1), // Token expiration time (you can adjust this as needed)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
             };
-
-            var token = new JwtSecurityToken(
-                _configuration["Jwt:Issuer"],
-                _configuration["Jwt:Audience"],
-                claims,
-                expires: DateTime.Now.AddHours(1), // Token expiry time
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }

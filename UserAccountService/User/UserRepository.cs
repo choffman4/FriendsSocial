@@ -38,28 +38,14 @@ namespace UserAccountService.User
             return await _grpcClient.ValidateTokenAsync(new ValidateTokenRequest());
         }
 
-        public async Task<ResetPasswordResponse> RequestPasswordResetAsync(string email)
+        public async Task<ResetPasswordResponse> ResetPasswordAsync(string email, string password, string newpassword)
         {
-            return await _grpcClient.ResetPasswordAsync(new ResetPasswordRequest { Email = email });
+            return await _grpcClient.ResetPasswordAsync(new ResetPasswordRequest { Email = email, CurrentPassword = password, NewPassword = newpassword });
         }
 
-        public async Task<PerformResetPasswordResponse> ResetPasswordAsync(string email, string token, string newPassword)
+        public async Task<UserExistsResponse> UserExistsByEmailAsync(string email)
         {
-            return await _grpcClient.PerformResetPasswordAsync(new PerformResetPasswordRequest
-            {
-                Email = email,
-                Token = token,
-                NewPassword = newPassword
-            });
-        }
-
-        public class UserAlreadyExistsException : Exception
-        {
-            public UserAlreadyExistsException() : base() { }
-
-            public UserAlreadyExistsException(string message) : base(message) { }
-
-            // You can also add more constructors based on your needs
+            return await _grpcClient.UserExistsByEmailAsync(new UserExistsRequest { Email = email });
         }
     }
 }
