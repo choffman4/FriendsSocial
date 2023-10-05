@@ -13,7 +13,7 @@ services:
       MYSQL_DATABASE: user_accounts_database
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql   # Mount our SQL script
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql   # Mount SQL script
     ports:
       - "3307:3306"
     networks:
@@ -28,7 +28,7 @@ services:
       MONGO_INITDB_DATABASE: mongodb
     volumes:
       - mongo_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro  # Mount our MongoDB initialization script
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro  # Mount MongoDB initialization script
     ports:
       - "27018:27017"
     networks:
@@ -48,7 +48,7 @@ services:
     build:
       context: ./UserAccountService   # Replace with the actual path to your UserAccountService project
       dockerfile: Dockerfile                # Use the Dockerfile for your UserAccountService
-    container_name: user_api
+    container_name: user_account_service_api
     ports:
       - "8000:80"
     networks:

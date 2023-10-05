@@ -3,6 +3,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using GrpcUserService;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace UserAccountService.User
 {
@@ -10,14 +11,16 @@ namespace UserAccountService.User
     {
         private readonly UserService.UserServiceClient _grpcClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<UserRepository> _logger;
 
-        public UserRepository(IConfiguration configuration)
+        public UserRepository(ILogger<UserRepository> logger, IConfiguration configuration)
         {
             _configuration = configuration;
             var host = _configuration["GrpcService:Host"];
             var port = _configuration["GrpcService:Port"];
             var channel = new Channel($"{host}:{port}", ChannelCredentials.Insecure);
             _grpcClient = new UserService.UserServiceClient(channel);
+            _logger = logger;
         }
 
         public async Task<RegisterUserResponse> RegisterUserAsync(string email, string password)
@@ -48,6 +51,15 @@ namespace UserAccountService.User
                 Token = token,
                 NewPassword = newPassword
             });
+        }
+
+        public class UserAlreadyExistsException : Exception
+        {
+            public UserAlreadyExistsException() : base() { }
+
+            public UserAlreadyExistsException(string message) : base(message) { }
+
+            // You can also add more constructors based on your needs
         }
     }
 }
