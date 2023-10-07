@@ -123,5 +123,29 @@ namespace UserAccountService.Controllers
                 return Ok(new { Exists = false });
             }
         }
+
+        [HttpPost("deactivate")]
+        public async Task<IActionResult> DeactivateUserAsync([FromBody] DeactivateUserRequest request)
+        {
+            if (request == null)
+            {
+                return BadRequest("Invalid request format");
+            }
+
+            try
+            {
+                var response = await _userRepository.DeactivateUserAsync(request.Email, request.Password);
+                return Ok(response);
+            } catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                return NotFound(ex.Status.Detail);
+            } catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Unauthenticated)
+            {
+                return Unauthorized(ex.Status.Detail);
+            } catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error occurred during user deactivation");
+            }
+        }
     }
 }

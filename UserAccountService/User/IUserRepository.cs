@@ -17,5 +17,9 @@ public interface IUserRepository
 
     // Method to check if a user exists by email
     Task<UserExistsResponse> UserExistsByEmailAsync(string email);
+
+    // method to deactivate user account
+    Task<DeactivateUserResponse> DeactivateUserAsync(string email, string password);
+
 }
 

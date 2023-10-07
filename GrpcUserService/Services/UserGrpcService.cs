@@ -24,7 +24,6 @@ namespace GrpcUserService.Services
         private readonly IConfiguration _configuration;
         private readonly IProducer<string, string> _kafkaProducer;
 
-
         public UserGrpcService(ILogger<UserGrpcService> logger, IConfiguration configuration, IOptions<KafkaSettings> kafkaSettings)
         {
             _logger = logger;
@@ -70,11 +69,10 @@ namespace GrpcUserService.Services
 
                 await cmd.ExecuteNonQueryAsync();
 
-                // Sending userId to the "RegisterUser" topic in Kafka
-                await _kafkaProducer.ProduceAsync("RegisterUser", new Message<string, string> { Key = userId, Value = userId });
-
 
                 await connection.CloseAsync();
+
+                await SendToKafka(userId);
 
                 var jwtToken = GenerateJwtToken(userId);
                 return new RegisterUserResponse { Token = jwtToken };
@@ -268,6 +266,59 @@ namespace GrpcUserService.Services
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        private async Task SendToKafka(string userId)
+        {
+            await _kafkaProducer.ProduceAsync("RegisterUser", new Message<string, string> { Key = null, Value = userId });
+            _kafkaProducer.Flush(TimeSpan.FromSeconds(10));
+        }
+
+        public async override Task<DeactivateUserResponse> DeactivateUser(DeactivateUserRequest request, ServerCallContext context)
+        {
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+            using MySqlConnection connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            try
+            {
+                // Fetch the hashed password from the database using the Email
+                string fetchPasswordQuery = "SELECT UserId, PasswordHash FROM UserAccounts WHERE Email = @Email AND IsActive = 1";
+                MySqlCommand cmd = new MySqlCommand(fetchPasswordQuery, connection);
+                cmd.Parameters.AddWithValue("@Email", request.Email);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                if (!reader.HasRows)
+                {
+                    throw new RpcException(new Status(StatusCode.NotFound, "User not found or already deactivated."));
+                }
+
+                await reader.ReadAsync();
+                string userId = reader.GetString("UserId");
+                string storedHash = reader.GetString("PasswordHash");
+
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, storedHash))
+                {
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid password."));
+                }
+
+                // If password verification is successful, deactivate the user
+                reader.Close();
+
+                string deactivateQuery = "UPDATE UserAccounts SET IsActive = 0 WHERE UserId = @UserId";
+                cmd = new MySqlCommand(deactivateQuery, connection);
+                cmd.Parameters.AddWithValue("@UserId", userId);
+
+                await cmd.ExecuteNonQueryAsync();
+
+                await connection.CloseAsync();
+                return new DeactivateUserResponse { Message = "User has been successfully deactivated." };
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during user deactivation");
+                throw new RpcException(new Status(StatusCode.Internal, "Internal server error occurred during user deactivation"));
+            }
         }
     }
 }

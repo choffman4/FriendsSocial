@@ -1,6 +1,7 @@
 using GrpcMongoService.Kafka;
 using GrpcMongoService.Services;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Driver;
 
 namespace GrpcMongoService
 {
@@ -10,14 +11,24 @@ namespace GrpcMongoService
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Additional configuration is required to successfully run gRPC on macOS.
-            // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
-
             // Configure the services here
             builder.Services.AddGrpc();
             builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
             builder.Services.AddHostedService<KafkaConsumerService>();
             // other service configurations...
+
+            builder.Services.AddSingleton<MongoClient>(sp =>
+            {
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                var mongoConnectionString = configuration.GetConnectionString("MongoDb");
+                return new MongoClient(mongoConnectionString);
+            });
+
+            builder.Services.AddSingleton<IMongoDatabase>(sp =>
+            {
+                var client = sp.GetRequiredService<MongoClient>();
+                return client.GetDatabase("mongodb");
+            });
 
             var app = builder.Build();
 

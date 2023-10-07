@@ -47,5 +47,10 @@ namespace UserAccountService.User
         {
             return await _grpcClient.UserExistsByEmailAsync(new UserExistsRequest { Email = email });
         }
+
+        public async Task<DeactivateUserResponse> DeactivateUserAsync(string email, string password)
+        {
+            return await _grpcClient.DeactivateUserAsync(new DeactivateUserRequest { Email = email, Password = password });
+        }
     }
 }

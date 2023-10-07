@@ -54,6 +54,15 @@ message UserExistsResponse {
   bool Exists = 1;
 }
 
+message DeactivateUserRequest {
+  string Email = 1;
+  string Password = 2;
+}
+
+message DeactivateUserResponse {
+    string message = 1;
+}
+
 // User API service definition
 service UserService {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
@@ -61,4 +70,5 @@ service UserService {
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
   rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
   rpc UserExistsByEmail(UserExistsRequest) returns (UserExistsResponse);
+  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse);
 }
