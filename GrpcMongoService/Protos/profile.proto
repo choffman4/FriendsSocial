@@ -7,8 +7,8 @@ package profile;
 
 service ProfileService {
 	// Sends a greeting
-	 rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
-	 rpc GetProfile (GetProfileRequest) returns (GetProfileResponse);
+	rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
+	rpc GetProfile (GetProfileRequest) returns (GetProfileResponse);
 }
 
 message UpdateProfileRequest {
@@ -16,6 +16,12 @@ message UpdateProfileRequest {
 	string First_Name = 2;
 	string Last_Name = 3;
 	string Bio = 4;
+	string Hometown = 5;
+	string Occupation = 6;
+	string ExternalLink = 7;
+	string DateOfBirth = 8;
+	string ProfilePictureUrl = 9;
+	string CoverPictureUrl = 10;
 }
 
 message UpdateProfileResponse {
@@ -30,5 +36,12 @@ message GetProfileResponse {
 	string First_Name = 1;
 	string Last_Name = 2;
 	string Bio = 3;
+	string Hometown = 4;
+	string Occupation = 5;
+	string ExternalLink = 6;
+	string DateOfBirth = 7;
+	string ProfilePictureUrl = 8;
+	string CoverPictureUrl = 9;
 }
+
 

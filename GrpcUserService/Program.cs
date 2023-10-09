@@ -43,10 +43,11 @@ namespace GrpcUserService
 
                 await adminClient.CreateTopicsAsync(new List<TopicSpecification>
                 {
-                    new TopicSpecification { Name = "RegisterUser", NumPartitions = 1, ReplicationFactor = 1 }
+                    new TopicSpecification { Name = "RegisterUser", NumPartitions = 1, ReplicationFactor = 1 },
+                    new TopicSpecification { Name = "UserActivation", NumPartitions = 1, ReplicationFactor = 1 }
                 });
 
-                logger.LogInformation("Kafka topic 'RegisterUser' created successfully.");
+                logger.LogInformation("Kafka topic 'RegisterUser' created successfully. Kafka topic 'UserActivation' created successfully.");
             } catch (CreateTopicsException e)
             {
                 if (e.Results[0].Error.Code == ErrorCode.TopicAlreadyExists)

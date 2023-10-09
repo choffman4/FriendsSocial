@@ -30,11 +30,11 @@ namespace GrpcMongoService.Services
             {
                 GroupId = "my-group",
                 BootstrapServers = _kafkaSettings.BootstrapServers,
-                // ... other necessary config values
             };
 
             _consumer = new ConsumerBuilder<Ignore, string>(conf).Build();
             _consumer.Subscribe("RegisterUser");
+            _consumer.Subscribe("UserActivation");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -44,26 +44,38 @@ namespace GrpcMongoService.Services
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     var consumeResult = _consumer.Consume(stoppingToken);
-                    if (consumeResult.Topic == "RegisterUser")
-                    {
-                        var userId = consumeResult.Message.Value;
+                    var currentTopic = consumeResult.Topic;
 
-                        // Check if a profile already exists for this userId
-                        var existingProfile = _profiles.Find(p => p.UserId == userId).FirstOrDefault(); // Corrected this line
-                        if (existingProfile == null)
-                        {
-                            // Create a new user profile
-                            var userProfile = new UserProfile { UserId = userId };
-
-                            _profiles.InsertOne(userProfile); // Corrected this line
-                            _logger.LogInformation($"Created a user profile for userId: {userId}");
-                        } else
-                        {
-                            _logger.LogInformation($"Profile already exists for userId: {userId}");
-                        }
-                    } else
+                    switch (currentTopic)
                     {
-                        _logger.LogInformation($"Received unknown topic {consumeResult.Topic} at {consumeResult.TopicPartitionOffset}: {consumeResult.Value}");
+                        case "RegisterUser":
+                            var userId = consumeResult.Message.Value;
+
+                            // Check if a profile already exists for this userId
+                            var existingProfile = _profiles.Find(p => p.UserId == userId).FirstOrDefault();
+                            if (existingProfile == null)
+                            {
+                                // Create a new user profile
+                                var userProfile = new UserProfile(userId);
+
+                                _profiles.InsertOne(userProfile);
+                                _logger.LogInformation($"Created a user profile for userId: {userId}");
+                            } else
+                            {
+                                _logger.LogInformation($"Profile already exists for userId: {userId}");
+                            }
+                            break;
+
+                        // Add more cases for handling other topics
+                        case "AnotherTopic":
+                            // Handle messages from "AnotherTopic"
+                            break;
+
+                        // Add additional cases as needed
+
+                        default:
+                            _logger.LogInformation($"Received unknown topic {currentTopic} at {consumeResult.TopicPartitionOffset}: {consumeResult.Value}");
+                            break;
                     }
                 }
             } catch (OperationCanceledException)

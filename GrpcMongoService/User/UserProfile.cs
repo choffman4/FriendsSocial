@@ -12,17 +12,27 @@ namespace GrpcMongoService.User
         public string Id { get; set; }
 
         public string UserId { get; set; }
+        public string Username { get; set; }
+        public bool IsActive { get; set; }
 
-        // Other properties for the user profile can go here, for example:
-        public string FullName { get; set; }
-        public string Email { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Bio { get; set; }
+        public string HomeTown { get; set; }
+        public string Occupation { get; set; }
+        public string ExternalLink { get; set; }
+        public DateTime JoinedDate { get; set; }
         public DateTime DateOfBirth { get; set; }
-        // ... any other necessary fields ...
+
+        public string ProfilePictureUrl { get; set; }
+        public string CoverPictureUrl { get; set; }
 
         // Add default values or custom logic in the constructor if necessary
-        public UserProfile()
+        public UserProfile(string userid)
         {
-            // Default values or logic on creation can go here
+            UserId = userid;
+            JoinedDate = DateTime.UtcNow.Date;
+            IsActive = true;
         }
     }
 }

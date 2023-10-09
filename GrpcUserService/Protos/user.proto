@@ -6,24 +6,24 @@ package user;
 
 // User registration request message
 message RegisterUserRequest {
-  string Email = 1;
-  string Password = 2;
+    string Email = 1;
+    string Password = 2;
 }
 
 // User registration response message
 message RegisterUserResponse {
-  string Token = 1;
+    string Token = 1;
 }
 
 // User login request message
 message LoginRequest {
-  string Email = 1;
-  string Password = 2;
+    string Email = 1;
+    string Password = 2;
 }
 
 // User login response message
 message LoginResponse {
-  string Token = 1;
+    string Token = 1;
 }
 
 // Token validation request message
@@ -46,17 +46,17 @@ message ResetPasswordResponse {
 
 // Message to request user existence by email
 message UserExistsRequest {
-  string Email = 1;
+    string Email = 1;
 }
 
 // Response message for user existence check
 message UserExistsResponse {
-  bool Exists = 1;
+    bool Exists = 1;
 }
 
 message DeactivateUserRequest {
-  string Email = 1;
-  string Password = 2;
+    string Email = 1;
+    string Password = 2;
 }
 
 message DeactivateUserResponse {
@@ -65,10 +65,10 @@ message DeactivateUserResponse {
 
 // User API service definition
 service UserService {
-  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
-  rpc Login(LoginRequest) returns (LoginResponse);
-  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
-  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
-  rpc UserExistsByEmail(UserExistsRequest) returns (UserExistsResponse);
-  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse);
+    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+    rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+    rpc UserExistsByEmail(UserExistsRequest) returns (UserExistsResponse);
+    rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse);
 }
