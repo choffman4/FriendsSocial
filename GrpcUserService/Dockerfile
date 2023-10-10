@@ -9,6 +9,8 @@ RUN dotnet restore
 # Publish the application
 RUN dotnet publish -c Release -o out
 
+RUN apt-get update && apt-get install -y iputils-ping telnet
+
 # Build the runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app

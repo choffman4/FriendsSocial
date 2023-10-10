@@ -283,8 +283,16 @@ namespace GrpcUserService.Services
 
         private async Task SendToKafka(string userId)
         {
-            await _kafkaProducer.ProduceAsync("RegisterUser", new Message<string, string> { Key = null, Value = userId });
-            _kafkaProducer.Flush(TimeSpan.FromSeconds(10));
+            try
+            {
+                await _kafkaProducer.ProduceAsync("RegisterUser", new Message<string, string> { Key = null, Value = userId });
+                _logger.LogInformation("Message sent to Kafka.");
+                //_kafkaProducer.Flush(TimeSpan.FromSeconds(10));
+            } catch (ProduceException<Null, string> ex)
+            {
+                _logger.LogError(ex, "Error occurred while sending message to Kafka.");
+                // Handle the exception as needed.
+            }
         }
 
         public async override Task<DeactivateUserResponse> DeactivateUser(DeactivateUserRequest request, ServerCallContext context)

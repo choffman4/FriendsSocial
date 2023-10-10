@@ -33,8 +33,10 @@ namespace GrpcMongoService.Services
             };
 
             _consumer = new ConsumerBuilder<Ignore, string>(conf).Build();
-            _consumer.Subscribe("RegisterUser");
-            _consumer.Subscribe("UserActivation");
+
+            _logger.LogInformation("Kafka consumer connected successfully to {BootstrapServers}.", _kafkaSettings.BootstrapServers);
+
+            _consumer.Subscribe(new List<string> { "RegisterUser", "UserActivation" });
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,6 +47,8 @@ namespace GrpcMongoService.Services
                 {
                     var consumeResult = _consumer.Consume(stoppingToken);
                     var currentTopic = consumeResult.Topic;
+
+                    _logger.LogInformation($"Received message at {consumeResult.TopicPartitionOffset}: {consumeResult.Value}");
 
                     switch (currentTopic)
                     {
@@ -67,7 +71,7 @@ namespace GrpcMongoService.Services
                             break;
 
                         // Add more cases for handling other topics
-                        case "AnotherTopic":
+                        case "UserActivation":
                             // Handle messages from "AnotherTopic"
                             break;
 

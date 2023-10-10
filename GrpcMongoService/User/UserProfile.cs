@@ -22,7 +22,7 @@ namespace GrpcMongoService.User
         public string Occupation { get; set; }
         public string ExternalLink { get; set; }
         public DateTime JoinedDate { get; set; }
-        public DateTime DateOfBirth { get; set; }
+        public string DateOfBirth { get; set; }
 
         public string ProfilePictureUrl { get; set; }
         public string CoverPictureUrl { get; set; }
