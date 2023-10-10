@@ -108,6 +108,9 @@ namespace GrpcUserService.Services
                 string storedHash = reader.GetString("PasswordHash");
                 bool isActive = reader.GetBoolean("IsActive");
 
+                // Close the DataReader before executing another query
+                reader.Close();
+
                 if (!BCrypt.Net.BCrypt.Verify(request.Password, storedHash))
                 {
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid password."));
@@ -122,7 +125,7 @@ namespace GrpcUserService.Services
                     await cmd.ExecuteNonQueryAsync();
 
                     // Send a Kafka message indicating user activation
-                    await SendUserActivationMessage(userId);
+                    await SendUserActivationMessage(userId, isDeactivation: false);
                 }
 
                 var jwtToken = GenerateJwtToken(userId);
@@ -334,6 +337,10 @@ namespace GrpcUserService.Services
                 await cmd.ExecuteNonQueryAsync();
 
                 await connection.CloseAsync();
+
+                // Send a Kafka message for user deactivation
+                await SendUserActivationMessage(userId, isDeactivation: true);
+
                 return new DeactivateUserResponse { Message = "User has been successfully deactivated." };
             } catch (Exception ex)
             {
@@ -342,16 +349,17 @@ namespace GrpcUserService.Services
             }
         }
 
-        private async Task SendUserActivationMessage(string userId)
+        private async Task SendUserActivationMessage(string userId, bool isDeactivation)
         {
             try
             {
                 // Send a Kafka message with user activation information
-                await _kafkaProducer.ProduceAsync("UserActivation", new Message<string, string> { Key = null, Value = userId });
+                string topicName = isDeactivation ? "UserDeactivation" : "UserActivation";
+                await _kafkaProducer.ProduceAsync(topicName, new Message<string, string> { Key = null, Value = userId });
                 _kafkaProducer.Flush(TimeSpan.FromSeconds(10));
             } catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while sending user activation message to Kafka.");
+                _logger.LogError(ex, "Error occurred while sending user activation/deactivation message to Kafka.");
                 // Handle any Kafka message sending errors as needed
             }
         }

@@ -36,7 +36,7 @@ namespace GrpcMongoService.Services
 
             _logger.LogInformation("Kafka consumer connected successfully to {BootstrapServers}.", _kafkaSettings.BootstrapServers);
 
-            _consumer.Subscribe(new List<string> { "RegisterUser", "UserActivation" });
+            _consumer.Subscribe(new List<string> { "RegisterUser", "UserActivation", "UserDeactivation" });
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -72,7 +72,35 @@ namespace GrpcMongoService.Services
 
                         // Add more cases for handling other topics
                         case "UserActivation":
-                            // Handle messages from "AnotherTopic"
+                            var activationUserId = consumeResult.Message.Value;
+
+                            // Update the activation status of the user profile
+                            var activationProfile = _profiles.Find(p => p.UserId == activationUserId).FirstOrDefault();
+                            if (activationProfile != null)
+                            {
+                                activationProfile.IsActive = true;
+                                _profiles.ReplaceOne(p => p.UserId == activationUserId, activationProfile);
+                                _logger.LogInformation($"Activated user profile for userId: {activationUserId}");
+                            } else
+                            {
+                                _logger.LogInformation($"User profile not found for activation of userId: {activationUserId}");
+                            }
+                            break;
+
+                        case "UserDeactivation":
+                            var deactivationUserId = consumeResult.Message.Value;
+
+                            // Update the activation status of the user profile
+                            var deactivationProfile = _profiles.Find(p => p.UserId == deactivationUserId).FirstOrDefault();
+                            if (deactivationProfile != null)
+                            {
+                                deactivationProfile.IsActive = false;
+                                _profiles.ReplaceOne(p => p.UserId == deactivationUserId, deactivationProfile);
+                                _logger.LogInformation($"Deactivated user profile for userId: {deactivationUserId}");
+                            } else
+                            {
+                                _logger.LogInformation($"User profile not found for deactivation of userId: {deactivationUserId}");
+                            }
                             break;
 
                         // Add additional cases as needed

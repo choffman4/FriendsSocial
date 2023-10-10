@@ -71,7 +71,7 @@ namespace GrpcMongoService.Services
 
                 // Connect to your MongoDB database and collection
                 var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDB"));
-                var database = mongoClient.GetDatabase("YourDatabaseName");
+                var database = mongoClient.GetDatabase("profileDatabase");
                 var collection = database.GetCollection<UserProfile>("profiles");
 
                 // Find the profile by user ID

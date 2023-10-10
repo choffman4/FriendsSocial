@@ -44,7 +44,8 @@ namespace GrpcUserService
                 await adminClient.CreateTopicsAsync(new List<TopicSpecification>
                 {
                     new TopicSpecification { Name = "RegisterUser", NumPartitions = 1, ReplicationFactor = 1 },
-                    new TopicSpecification { Name = "UserActivation", NumPartitions = 1, ReplicationFactor = 1 }
+                    new TopicSpecification { Name = "UserActivation", NumPartitions = 1, ReplicationFactor = 1 },
+                    new TopicSpecification { Name = "UserDeactivation", NumPartitions = 1, ReplicationFactor = 1 }
                 });
 
                 logger.LogInformation("Kafka topic 'RegisterUser' created successfully. Kafka topic 'UserActivation' created successfully.");
