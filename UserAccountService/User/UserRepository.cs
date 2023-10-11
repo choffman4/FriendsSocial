@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using Grpc.Core;
 using Grpc.Net.Client;
-using GrpcUserService;
+using GrpcSqlUserService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +9,7 @@ namespace UserAccountService.User
 {
     public class UserRepository : IUserRepository
     {
-        private readonly UserService.UserServiceClient _grpcClient;
+        private readonly SqlUserService.SqlUserServiceClient _grpcClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<UserRepository> _logger;
 
@@ -19,7 +19,7 @@ namespace UserAccountService.User
             var host = _configuration["GrpcService:Host"];
             var port = _configuration["GrpcService:Port"];
             var channel = new Channel($"{host}:{port}", ChannelCredentials.Insecure);
-            _grpcClient = new UserService.UserServiceClient(channel);
+            _grpcClient = new SqlUserService.SqlUserServiceClient(channel);
             _logger = logger;
         }
 

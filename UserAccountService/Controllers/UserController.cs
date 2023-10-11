@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Grpc.Core;
-using GrpcUserService;
+using GrpcSqlUserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserAccountService.User;

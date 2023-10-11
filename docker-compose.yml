@@ -38,7 +38,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: mysql_user_accounts
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: user_accounts_database
@@ -52,7 +52,7 @@ services:
 
   mongo:
     image: mongo:latest
-    container_name: mongodb_service
+    container_name: mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
@@ -65,11 +65,11 @@ services:
     networks:
       - friends
 
-  grpc-user-service:
+  grpc-sql-user-account-service:
     build:
-      context: ./GrpcUserService
+      context: ./GrpcSqlUserService
       dockerfile: Dockerfile
-    container_name: grpc_user_service
+    container_name: grpc_sql_user_account_service
     ports:
       - "8080:80"
     depends_on: 
@@ -87,15 +87,35 @@ services:
     networks:
       - friends
 
-  grpc-mongo-service:
+  grpc-mongo-profile-service:
     build:
-      context: ./GrpcMongoService
+      context: ./GrpcMongoProfileService
       dockerfile: Dockerfile
-    container_name: grpc_mongo_service
+    container_name: grpc_mongo_profile_service
     ports:
       - "8001:80"
+    networks:
+      - friends
+
+  profile-service-api:
+    build:
+      context: ./ProfileService
+      dockerfile: Dockerfile
+    container_name: profile_service_api
+    ports:
+      - "8002:80"
+    networks:
+      - friends
+
+  mongo-kafka-consumer-service:
+    build:
+      context: ./MongoKafkaConsumerService
+      dockerfile: Dockerfile
+    container_name: mongo_kafka_consumer_service
     depends_on:
       - kafka
+    ports:
+      - "8003:80"
     networks:
       - friends
 

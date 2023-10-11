@@ -1,4 +1,4 @@
-﻿using GrpcUserService;
+﻿using GrpcSqlUserService;
 using UserAccountService.User;
 
 public interface IUserRepository

@@ -1,12 +1,47 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using GrpcMongoProfileService;
+using Microsoft.AspNetCore.Mvc;
+using ProfileService.Profile;
+using System.Threading.Tasks;
 
-namespace ProfileService.Controllers
+[Route("profile")]
+[ApiController]
+public class ProfileController : ControllerBase
 {
-    public class ProfileController : Controller
+    private readonly IProfileRepository _profileRepository;
+
+    public ProfileController(IProfileRepository profileRepository)
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        _profileRepository = profileRepository;
+    }
+
+    [HttpPost("update")]
+    public async Task<IActionResult> UpdateProfileAsync([FromBody] UpdateProfileRequest request)
+    {
+        var response = await _profileRepository.UpdateProfileAsync(request);
+        return Ok(response);
+    }
+
+    [HttpGet("userid/{userGuid}")]
+    public async Task<IActionResult> GetProfileAsync(string userGuid)
+    {
+        var request = new GetProfileByGuidRequest { Guid = userGuid };
+        var response = await _profileRepository.GetProfileByGuidAsync(request);
+        return Ok(response);
+    }
+
+    [HttpGet("check-username")]
+    public async Task<IActionResult> CheckUsernameAvailabilityAsync(string username)
+    {
+        var request = new UsernameAvailabilityRequest { Username = username };
+        var response = await _profileRepository.CheckUsernameAvailabilityAsync(request);
+        return Ok(response);
+    }
+
+    [HttpGet("username/{username}")]
+    public async Task<IActionResult> GetProfileByUsernameAsync(string username)
+    {
+        var request = new GetProfileByUsernameRequest { Username = username };
+        var response = await _profileRepository.GetProfileByUsernameAsync(request);
+        return Ok(response);
     }
 }

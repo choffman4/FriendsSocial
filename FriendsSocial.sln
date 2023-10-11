@@ -3,16 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrontEnd", "FrontEnd\FrontEnd.csproj", "{AF73F419-FEEF-470F-B8F2-05AE1CA336FA}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{8D12EE10-2C0C-4B87-80B7-3F0171CA4B44}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
 		init.sql = init.sql
 		mongo-init.js = mongo-init.js
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcUserService", "GrpcUserService\GrpcUserService.csproj", "{24736B2A-1F42-49D6-8624-0972C67F0F0C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserAccountService", "UserAccountService\UserAccountService.csproj", "{4471FFFB-44E1-43C5-A8D4-3DB87CB4940F}"
 EndProject
@@ -28,7 +24,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserFriendsService", "UserF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotificationService", "NotificationService\NotificationService.csproj", "{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcMongoService", "GrpcMongoService\GrpcMongoService.csproj", "{BE70B08C-70CA-46F7-91D7-E61536B12403}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcMongoPostingService", "GrpcMongoPostingService\GrpcMongoPostingService.csproj", "{EADFC1B5-6E35-48DF-8799-DF7FA8AB1E02}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcMongoFriendsService", "GrpcMongoFriendsService\GrpcMongoFriendsService.csproj", "{99254F89-9DB0-453F-A8B5-716DC5CCB51D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcSqlUserService", "GrpcSqlUserService\GrpcSqlUserService.csproj", "{7142E705-3C19-41D2-8A26-97C91A0067A1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcMongoProfileService", "GrpcMongoProfileService\GrpcMongoProfileService.csproj", "{D50DD835-90DA-4D42-99E9-A36C551EA9E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoKafkaConsumerService", "MongoKafkaConsumerService\MongoKafkaConsumerService.csproj", "{8354896F-4AE3-43E2-9114-F2D2A315D4F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,16 +40,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AF73F419-FEEF-470F-B8F2-05AE1CA336FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF73F419-FEEF-470F-B8F2-05AE1CA336FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AF73F419-FEEF-470F-B8F2-05AE1CA336FA}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{AF73F419-FEEF-470F-B8F2-05AE1CA336FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AF73F419-FEEF-470F-B8F2-05AE1CA336FA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AF73F419-FEEF-470F-B8F2-05AE1CA336FA}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{24736B2A-1F42-49D6-8624-0972C67F0F0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{24736B2A-1F42-49D6-8624-0972C67F0F0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{24736B2A-1F42-49D6-8624-0972C67F0F0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{24736B2A-1F42-49D6-8624-0972C67F0F0C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4471FFFB-44E1-43C5-A8D4-3DB87CB4940F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4471FFFB-44E1-43C5-A8D4-3DB87CB4940F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4471FFFB-44E1-43C5-A8D4-3DB87CB4940F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -74,10 +68,26 @@ Global
 		{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BE70B08C-70CA-46F7-91D7-E61536B12403}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EADFC1B5-6E35-48DF-8799-DF7FA8AB1E02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EADFC1B5-6E35-48DF-8799-DF7FA8AB1E02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EADFC1B5-6E35-48DF-8799-DF7FA8AB1E02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EADFC1B5-6E35-48DF-8799-DF7FA8AB1E02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99254F89-9DB0-453F-A8B5-716DC5CCB51D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99254F89-9DB0-453F-A8B5-716DC5CCB51D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99254F89-9DB0-453F-A8B5-716DC5CCB51D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99254F89-9DB0-453F-A8B5-716DC5CCB51D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7142E705-3C19-41D2-8A26-97C91A0067A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7142E705-3C19-41D2-8A26-97C91A0067A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7142E705-3C19-41D2-8A26-97C91A0067A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7142E705-3C19-41D2-8A26-97C91A0067A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D50DD835-90DA-4D42-99E9-A36C551EA9E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D50DD835-90DA-4D42-99E9-A36C551EA9E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D50DD835-90DA-4D42-99E9-A36C551EA9E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D50DD835-90DA-4D42-99E9-A36C551EA9E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8354896F-4AE3-43E2-9114-F2D2A315D4F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8354896F-4AE3-43E2-9114-F2D2A315D4F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8354896F-4AE3-43E2-9114-F2D2A315D4F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8354896F-4AE3-43E2-9114-F2D2A315D4F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
