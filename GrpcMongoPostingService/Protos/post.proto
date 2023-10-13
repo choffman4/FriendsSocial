@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcMongoPostingService";
+
+package post;
+
+// User API service definition
+service MongoPostingService {
+    rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
+    rpc GetPostById(GetPostByIdRequest) returns (GetPostByIdResponse);
+
+    rpc GetAllPostsByUserId(GetAllPostsByUserIdRequest) returns (stream GetAllPostsByUserIdResponse);
+    rpc EditPost(EditPostRequest) returns (EditPostResponse);
+    rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
+    rpc LikePost(LikePostRequest) returns (LikePostResponse);
+    rpc AddComment(AddCommentRequest) returns (AddCommentResponse);
+    rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse);
+    rpc LikeComment(LikeCommentRequest) returns (LikeCommentResponse);
+    rpc AddCommentToComment(AddCommentToCommentRequest) returns (AddCommentToCommentResponse);
+    rpc EditComment(EditCommentRequest) returns (EditCommentResponse);
+}
+
+message CreatePostRequest {
+    string userid = 1;
+    string title = 2;
+    string content = 3;
+    string privacyType = 4;
+}
+
+message CreatePostResponse {
+    string message = 1;
+}
+
+message GetPostByIdRequest {
+    string postid = 1;
+}
+
+message GetPostByIdResponse {
+    string userid = 1;
+    string title = 2;
+    string content = 3;
+    string date = 4;
+    repeated string childCommentIds = 5;
+    string message = 6;
+}
+
+message GetAllPostsByUserIdRequest {
+    string userid = 1;
+}
+
+message GetAllPostsByUserIdResponse {
+    string userid = 1;
+    string title = 2;
+    string content = 3;
+    string date = 4;
+    repeated string childCommentIds = 5;
+    string message = 6;
+}
+
+message EditPostRequest {
+    string postid = 1;
+    string title = 2;
+    string content = 3;
+    string privacyType = 4;
+}
+
+message EditPostResponse {
+    string message = 1;
+}
+
+message DeletePostRequest {
+	string postid = 1;
+}
+
+message DeletePostResponse {
+	string message = 1;
+}
+
+message LikePostRequest {
+    string postid = 1;
+    string userid = 2;
+}
+
+message LikePostResponse {
+    string message = 1;
+}
+
+message AddCommentRequest {
+    string postid = 1;
+    string userid = 2;
+    string content = 3;
+}
+
+message AddCommentResponse {
+    string message = 1;
+}
+
+message DeleteCommentRequest {
+    string commentid = 1;
+}
+
+message DeleteCommentResponse {
+    string message = 1;
+}
+
+message LikeCommentRequest {
+    string commentid = 1;
+    string userid = 2;
+}
+
+message LikeCommentResponse {
+    string message = 1;
+}
+
+message AddCommentToCommentRequest {
+    string parentPostId = 1;
+    string parentcommentid = 2;
+    string userid = 3;
+    string content = 4;
+}
+
+message AddCommentToCommentResponse {
+    string message = 1;
+}
+
+message EditCommentRequest {
+    string commentid = 1;
+    string content = 2;
+}
+
+message EditCommentResponse {
+	string message = 1;
+}

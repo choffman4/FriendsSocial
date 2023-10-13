@@ -13,9 +13,6 @@ namespace GrpcMongoProfileService
 
             // Configure the services here
             builder.Services.AddGrpc();
-            //builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
-            //builder.Services.AddHostedService<KafkaConsumerService>();
-            //// other service configurations...
 
             // Retrieve the MongoDB connection string from app settings
             var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb");

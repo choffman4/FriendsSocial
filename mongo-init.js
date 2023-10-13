@@ -1,29 +1,21 @@
+//2 databases: profileDatabase and profilePosts
 dbProfile = db.getSiblingDB('profileDatabase');
 dbPosts = db.getSiblingDB('profilePosts');
+dbFriends = db.getSiblingDB('profileFriends');
 
-// Connect to the admin database
-dbAdmin = db.getSiblingDB('admin');
-
-// Create the 'profiles' collection and insert a sample document
+//create collections
 dbProfile.createCollection("profiles");
-//dbProfile.profiles.insertOne({
-//    userGuid: "sample-user-guid",
-//    firstName: "Connor",
-//    lastName: "Hoffman",
-//    bio: "This is a sample bio."
-//});
-
-// Create the 'posts' collection and insert a sample post
 dbPosts.createCollection("posts");
-//dbPosts.posts.insertOne({
-//    userGuid: "sample-user-guid",
-//    title: "Sample Post",
-//    content: "This is a sample post content."
-//});
+dbPosts.createCollection("comments");
+dbFriends.createCollection("friendRequests");
+dbFriends.createCollection("friendships");
+
+//create admin user
+dbAdmin = db.getSiblingDB('admin');
 
 dbAdmin.createUser({
     user: 'root2',
-    pwd: 'password',  // replace 'your_password_here' with the desired password
+    pwd: 'password',
     roles: [
         { role: 'userAdminAnyDatabase', db: 'admin' },
         'readWriteAnyDatabase',

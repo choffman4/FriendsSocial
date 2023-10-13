@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcMongoFriendsService";
+
+package friend;
+
+// User API service definition
+service MongoFriendService {
+    rpc SendFriendRequest(SendFriendRequestRequest) returns (SendFriendRequestResponse);
+	rpc AcceptFriendRequest(AcceptFriendRequestRequest) returns (AcceptFriendRequestResponse);
+	rpc GetFriendRequestsSent(GetFriendRequestsSentRequest) returns (stream GetFriendRequestsSentResponse);
+	rpc GetFriendRequestsReceived(GetFriendRequestsReceivedRequest) returns (stream GetFriendRequestsReceivedResponse);
+	rpc	GetFriends(GetFriendsRequest) returns (stream GetFriendsResponse); //gets a list of all the friends a user has
+	rpc RemoveFriend(RemoveFriendRequest) returns (RemoveFriendResponse);
+}
+
+// Request message for SendFriendRequest
+message SendFriendRequestRequest {
+	string sender = 1;
+	string receiver = 2;
+}
+
+// Response message for SendFriendRequest
+message SendFriendRequestResponse {
+	string message = 1;
+}
+
+// Request message for AcceptFriendRequest
+message AcceptFriendRequestRequest {
+	string friendshipId = 1;
+}
+
+// Response message for AcceptFriendRequest
+message AcceptFriendRequestResponse {
+	string message = 1;
+}
+
+message GetFriendRequestsSentRequest {
+    string userId = 1;
+}
+
+message GetFriendRequestsSentResponse {
+	FriendRequestMessage friendRequests = 1;
+}
+
+message GetFriendRequestsReceivedRequest {
+    string userId = 1;
+}
+
+message GetFriendRequestsReceivedResponse {
+	FriendRequestMessage friendRequests = 1;
+}
+
+message FriendRequestMessage {
+	string sender = 1;
+	string receiver = 2;
+}
+
+message GetFriendsRequest {
+	string UserId = 1;
+}
+
+message GetFriendsResponse {
+	string friendId = 1;
+}
+
+message RemoveFriendRequest {
+	string friendshipId = 1;
+}
+
+message RemoveFriendResponse {
+	string message = 1;
+}

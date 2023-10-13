@@ -93,6 +93,26 @@ services:
       dockerfile: Dockerfile
     container_name: grpc_mongo_profile_service
     ports:
+      - "8004:80"
+    networks:
+      - friends
+
+  grpc-mongo-friend-service:
+    build:
+      context: ./GrpcMongoFriendsService
+      dockerfile: Dockerfile
+    container_name: grpc_mongo_friend_service
+    ports:
+      - "8005:80"
+    networks:
+      - friends
+
+  grpc-mongo-posting-service:
+    build:
+      context: ./GrpcMongoPostingService
+      dockerfile: Dockerfile
+    container_name: grpc_mongo_posting_service
+    ports:
       - "8001:80"
     networks:
       - friends
