@@ -8,6 +8,7 @@ package post;
 service MongoPostingService {
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
     rpc GetPostById(GetPostByIdRequest) returns (GetPostByIdResponse);
+
     rpc GetAllPostsByUserId(GetAllPostsByUserIdRequest) returns (stream GetAllPostsByUserIdResponse);
     rpc EditPost(EditPostRequest) returns (EditPostResponse);
     rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
@@ -17,7 +18,20 @@ service MongoPostingService {
     rpc LikeComment(LikeCommentRequest) returns (LikeCommentResponse);
     rpc AddCommentToComment(AddCommentToCommentRequest) returns (AddCommentToCommentResponse);
     rpc EditComment(EditCommentRequest) returns (EditCommentResponse);
-    rpc GetUsersPostsByDate() returns (stream GetAllPostsByUserIdResponse);
+    rpc GetComment(GetCommentRequest) returns (GetCommentResponse);
+}
+
+message GetCommentRequest {
+    string commentid = 1;
+}
+
+message GetCommentResponse {
+    string userid = 1;
+    string content = 2;
+    string date = 3;
+    repeated string childCommentIds = 4;
+    repeated string likes = 5;
+    string message = 6;
 }
 
 message CreatePostRequest {
@@ -40,16 +54,9 @@ message GetPostByIdResponse {
     string title = 2;
     string content = 3;
     string date = 4;
-    repeated Comment comments = 5;
-    string message = 6;
-}
-
-message Comment {
-    string commentid = 1;
-    string userid = 2;
-    string comment = 3;
-    string date = 4;
-    repeated Comment comments = 5;
+    repeated string childCommentIds = 5;
+    repeated string likes = 6;
+    string message = 7;
 }
 
 message GetAllPostsByUserIdRequest {
@@ -61,8 +68,9 @@ message GetAllPostsByUserIdResponse {
     string title = 2;
     string content = 3;
     string date = 4;
-    repeated Comment comments = 5;
-    string message = 6;
+    repeated string childCommentIds = 5;
+    repeated string likes = 6;
+    string message = 7;
 }
 
 message EditPostRequest {
@@ -96,7 +104,7 @@ message LikePostResponse {
 message AddCommentRequest {
     string postid = 1;
     string userid = 2;
-    string comment = 3;
+    string content = 3;
 }
 
 message AddCommentResponse {
@@ -121,9 +129,10 @@ message LikeCommentResponse {
 }
 
 message AddCommentToCommentRequest {
-    string parentcommentid = 1;
-    string userid = 2;
-    string comment = 3;
+    string parentPostId = 1;
+    string parentcommentid = 2;
+    string userid = 3;
+    string content = 4;
 }
 
 message AddCommentToCommentResponse {
@@ -132,7 +141,7 @@ message AddCommentToCommentResponse {
 
 message EditCommentRequest {
     string commentid = 1;
-    string comment = 2;
+    string content = 2;
 }
 
 message EditCommentResponse {

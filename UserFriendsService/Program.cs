@@ -1,3 +1,4 @@
+using UserFriendsService.Friend;
 
 namespace UserFriendsService
 {
@@ -7,7 +8,7 @@ namespace UserFriendsService
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            builder.Services.AddScoped<IFriendRepository, FriendRepository>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

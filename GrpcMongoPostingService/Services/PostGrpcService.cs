@@ -66,7 +66,8 @@ namespace GrpcMongoPostingService.Services
                         Title = post.Title,
                         Content = post.Content,
                         Date = post.PostedDate.ToString(), // Convert the date to string
-                        ChildCommentIds = { } // Initialize the repeated field
+                        ChildCommentIds = { }, // Initialize the repeated field
+                        Likes = { }
                     };
 
                     // Loop through post.ChildCommentIds and add each comment ID to the list of child comment IDs in the response
@@ -81,6 +82,13 @@ namespace GrpcMongoPostingService.Services
                             // Add the child comment ID to the response
                             response.ChildCommentIds.Add(childCommentId);
                         }
+                    }
+
+                    // Loop through post.Likes and add each like to the list of likes in the response
+                    foreach (var like in post.UserIdLikes)
+                    {
+                        // Add the like to the response
+                        response.Likes.Add(like);
                     }
 
                     return response;
@@ -120,7 +128,8 @@ namespace GrpcMongoPostingService.Services
                         Title = post.Title,
                         Content = post.Content,
                         Date = post.PostedDate.ToString(), // Convert the date to string
-                        ChildCommentIds = { } // Initialize the repeated field
+                        ChildCommentIds = { }, // Initialize the repeated field
+                        Likes = { }
                     };
 
                     // Loop through post.ChildCommentIds and add each comment ID to the list of child comment IDs in the response
@@ -135,6 +144,13 @@ namespace GrpcMongoPostingService.Services
                             // Add the child comment ID to the response
                             response.ChildCommentIds.Add(childCommentId);
                         }
+                    }
+
+                    // Loop through post.Likes and add each like to the list of likes in the response
+                    foreach (var like in post.UserIdLikes)
+                    {
+                        // Add the like to the response
+                        response.Likes.Add(like);
                     }
 
                     // Write the response to the stream
@@ -299,7 +315,7 @@ namespace GrpcMongoPostingService.Services
                 var commentCollection = database.GetCollection<Comment>("comments");
 
                 // Create a new child comment
-                var childComment = new Comment(request.Postid, "", request.Userid, request.Content);
+                var childComment = new Comment(request.Postid, request.Postid, request.Userid, request.Content);
 
                 // Insert the child comment into the comments collection
                 await commentCollection.InsertOneAsync(childComment);
@@ -500,7 +516,56 @@ namespace GrpcMongoPostingService.Services
             }
         }
 
+        public override async Task<GetCommentResponse> GetComment(GetCommentRequest request, ServerCallContext context)
+        {
+            try
+            {
+                // Connect to your MongoDB database
+                var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
+                var database = mongoClient.GetDatabase("profilePosts"); // Use the appropriate database name
+                var commentCollection = database.GetCollection<Comment>("comments");
 
+                // Find the comment by its CommentId
+                var commentFilter = Builders<Comment>.Filter.Eq(c => c.CommentId, request.Commentid);
+                var comment = await commentCollection.Find(commentFilter).FirstOrDefaultAsync();
+
+                if (comment != null)
+                {
+                    // Convert the comment to the response message
+                    var response = new GetCommentResponse
+                    {
+                        Userid = comment.UserId,
+                        Content = comment.Content,
+                        Date = comment.CommentedDate.ToString(),
+                        ChildCommentIds = { }, // Initialize the repeated field
+                        Likes = { } // Initialize the repeated field
+                    };
+
+                    // Loop through comment.ChildCommentIds and add each child comment ID to the list of child comment IDs in the response
+                    foreach (var childCommentId in comment.ChildCommentIds)
+                    {
+                        // Add the child comment ID to the response
+                        response.ChildCommentIds.Add(childCommentId);
+                    }
+
+                    // Loop through comment.Likes and add each like to the list of likes in the response
+                    foreach (var like in comment.UserIdLikes)
+                    {
+                        // Add the like to the response
+                        response.Likes.Add(like);
+                    }
+
+                    return response;
+                } else
+                {
+                    return new GetCommentResponse { Message = "Comment not found." };
+                }
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting a comment by ID.");
+                return new GetCommentResponse { Message = "An error occurred while getting the comment." };
+            }
+        }
 
     }
 }

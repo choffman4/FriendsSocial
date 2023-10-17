@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using GrpcMongoFriendsService.Friends;
+using GrpcMongoFriendService;
 
 namespace GrpcMongoFriendsService.Services
 {
@@ -25,9 +26,31 @@ namespace GrpcMongoFriendsService.Services
                 var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
                 var database = mongoClient.GetDatabase("profileFriends");
                 var friendRequestsCollection = database.GetCollection<FriendRequest>("friendRequests");
+                var friendshipsCollection = database.GetCollection<Friendship>("friendships");
+
+                // Check if a friendship already exists between sender and receiver
 
                 // Create a new friend request document
                 var friendRequest = new FriendRequest(request.Sender, request.Receiver);
+
+                // grab the id.
+                string friendshipId = friendRequest.friendshipRequestId;
+
+                var existingFriendship = friendshipsCollection.Find(f => f.friendshipId == friendshipId).FirstOrDefault();
+
+                if (existingFriendship != null)
+                {
+                    return Task.FromResult(new SendFriendRequestResponse { Message = "Friendship already exists." });
+                }
+
+                // Check if a friend request already exists between sender and receiver
+                var existingFriendRequest = friendRequestsCollection.Find(f => f.friendshipRequestId == friendshipId).FirstOrDefault();
+
+                if (existingFriendRequest != null)
+                {
+                    return Task.FromResult(new SendFriendRequestResponse { Message = "Friend request already sent." });
+                }
+
 
                 // Insert the friend request document into the collection
                 friendRequestsCollection.InsertOne(friendRequest);
@@ -217,5 +240,32 @@ namespace GrpcMongoFriendsService.Services
             }
         }
 
+        // Implement the GetFriendship RPC method
+        public override Task<GetFriendshipResponse> GetFriendship(GetFriendshipRequest request, ServerCallContext context)
+        {
+            try
+            {
+                // Connect to your MongoDB database and collection for friendships
+                var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
+                var database = mongoClient.GetDatabase("profileFriends");
+                var friendshipsCollection = database.GetCollection<Friendship>("friendships");
+
+                // Check if the friendship with the provided ID exists
+                var filter = Builders<Friendship>.Filter.Eq(f => f.friendshipId, request.FriendshipId);
+                var friendship = friendshipsCollection.Find(filter).FirstOrDefault();
+
+                if (friendship != null)
+                {
+                    return Task.FromResult(new GetFriendshipResponse { Message = "Friendship found." });
+                } else
+                {
+                    return Task.FromResult(new GetFriendshipResponse { Message = "Friendship not found." });
+                }
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while checking friendship status.");
+                return Task.FromResult(new GetFriendshipResponse { Message = "An error occurred while checking friendship status." });
+            }
+        }
     }
 }

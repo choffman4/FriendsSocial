@@ -1,3 +1,4 @@
+using PostingService.Post;
 
 namespace PostingService
 {
@@ -7,7 +8,7 @@ namespace PostingService
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            builder.Services.AddScoped<IPostRepository, PostRepository>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

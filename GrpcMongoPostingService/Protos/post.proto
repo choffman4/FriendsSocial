@@ -18,6 +18,20 @@ service MongoPostingService {
     rpc LikeComment(LikeCommentRequest) returns (LikeCommentResponse);
     rpc AddCommentToComment(AddCommentToCommentRequest) returns (AddCommentToCommentResponse);
     rpc EditComment(EditCommentRequest) returns (EditCommentResponse);
+    rpc GetComment(GetCommentRequest) returns (GetCommentResponse);
+}
+
+message GetCommentRequest {
+    string commentid = 1;
+}
+
+message GetCommentResponse {
+    string userid = 1;
+    string content = 2;
+    string date = 3;
+    repeated string childCommentIds = 4;
+    repeated string likes = 5;
+    string message = 6;
 }
 
 message CreatePostRequest {
@@ -41,7 +55,8 @@ message GetPostByIdResponse {
     string content = 3;
     string date = 4;
     repeated string childCommentIds = 5;
-    string message = 6;
+    repeated string likes = 6;
+    string message = 7;
 }
 
 message GetAllPostsByUserIdRequest {
@@ -54,7 +69,8 @@ message GetAllPostsByUserIdResponse {
     string content = 3;
     string date = 4;
     repeated string childCommentIds = 5;
-    string message = 6;
+    repeated string likes = 6;
+    string message = 7;
 }
 
 message EditPostRequest {

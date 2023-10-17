@@ -127,6 +127,26 @@ services:
     networks:
       - friends
 
+  posting-service-api:
+    build:
+      context: ./PostingService
+      dockerfile: Dockerfile
+    container_name: posting_service_api
+    ports:
+      - "8006:80"
+    networks:
+      - friends
+
+  friend-service-api:
+    build:
+      context: ./UserFriendsService
+      dockerfile: Dockerfile
+    container_name: friend_service_api
+    ports:
+      - "8007:80"
+    networks:
+      - friends
+
   mongo-kafka-consumer-service:
     build:
       context: ./MongoKafkaConsumerService

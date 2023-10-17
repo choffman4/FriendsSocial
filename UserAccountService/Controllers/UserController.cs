@@ -115,7 +115,7 @@ namespace UserAccountService.Controllers
 
             var response = await _userRepository.UserExistsByEmailAsync(email);
 
-            if (response != null && response.Exists) // Assuming `UserExistsResponse` has a boolean property called `Exists`.
+            if (response != null && response.Exists)
             {
                 return Ok(new { Exists = true });
             } else
