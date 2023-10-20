@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Components.Web;
 using SignalR.Data;
 using Microsoft.AspNetCore.ResponseCompression;
 using SignalR.Hubs;
+using Grpc.Net.Client;
+using Microsoft.Extensions.DependencyInjection;
+using SignalR.Services;
+//using SignalR.Services;
 
 namespace SignalR
 {
@@ -11,6 +15,21 @@ namespace SignalR
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Retrieve the gRPC service configuration from appsettings.json
+            var grpcConfig = builder.Configuration.GetSection("GrpcService");
+            string grpcHost = grpcConfig["Host"];
+            string grpcPort = grpcConfig["Port"];
+            var grpcAddress = $"http://{grpcHost}:{grpcPort}";
+
+            var channel = GrpcChannel.ForAddress(grpcAddress);
+            var grpcClient = new GrpcMongoMessagingService.MongoMessagingService.MongoMessagingServiceClient(channel);
+            builder.Services.AddSingleton(x =>
+            {
+                var logger = x.GetRequiredService<ILogger<MessagingServiceClientWrapper>>();
+                return new Services.MessagingServiceClientWrapper(grpcClient, logger);
+            });
+
 
             // Add services to the container.
             builder.Services.AddRazorPages();

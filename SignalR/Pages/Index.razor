@@ -10,6 +10,10 @@
         User:
         <input @bind="userInput" />
     </label>
+    <label>
+        Receiver:
+        <input @bind="receiverInput" />
+    </label>
 </div>
 <div class="form-group">
     <label>
@@ -33,6 +37,7 @@
     private List<string> messages = new List<string>();
     private string? userInput;
     private string? messageInput;
+    private string? receiverInput;
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,7 +59,7 @@
     {
         if (hubConnection is not null)
         {
-            await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+            await hubConnection.SendAsync("SendMessage", userInput, receiverInput, messageInput);
         }
     }
 

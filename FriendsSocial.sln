@@ -18,8 +18,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProfileService", "ProfileSe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PostingService", "PostingService\PostingService.csproj", "{E04AC984-E432-4404-B84E-EA1EF9221943}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessagingService", "MessagingService\MessagingService.csproj", "{258A5A9E-1D9E-4402-8173-2BA9F3968201}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserFriendsService", "UserFriendsService\UserFriendsService.csproj", "{51E6E8E2-A05B-446C-BCC9-4DBE31EB636C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotificationService", "NotificationService\NotificationService.csproj", "{B1E11CB0-B00F-428A-B2BC-7CFE8BC9CF99}"
@@ -35,6 +33,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoKafkaConsumerService", "MongoKafkaConsumerService\MongoKafkaConsumerService.csproj", "{8354896F-4AE3-43E2-9114-F2D2A315D4F5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalR", "SignalR\SignalR.csproj", "{A36B5DF6-CE64-466A-A6FB-6C747C7E38B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcMongoMessagingService", "GrpcMongoMessagingService\GrpcMongoMessagingService.csproj", "{8A61FB3E-E58D-454B-AD1B-F397AF799261}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,10 +58,6 @@ Global
 		{E04AC984-E432-4404-B84E-EA1EF9221943}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E04AC984-E432-4404-B84E-EA1EF9221943}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E04AC984-E432-4404-B84E-EA1EF9221943}.Release|Any CPU.Build.0 = Release|Any CPU
-		{258A5A9E-1D9E-4402-8173-2BA9F3968201}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{258A5A9E-1D9E-4402-8173-2BA9F3968201}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{258A5A9E-1D9E-4402-8173-2BA9F3968201}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{258A5A9E-1D9E-4402-8173-2BA9F3968201}.Release|Any CPU.Build.0 = Release|Any CPU
 		{51E6E8E2-A05B-446C-BCC9-4DBE31EB636C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{51E6E8E2-A05B-446C-BCC9-4DBE31EB636C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51E6E8E2-A05B-446C-BCC9-4DBE31EB636C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -94,6 +90,10 @@ Global
 		{A36B5DF6-CE64-466A-A6FB-6C747C7E38B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A36B5DF6-CE64-466A-A6FB-6C747C7E38B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A36B5DF6-CE64-466A-A6FB-6C747C7E38B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A61FB3E-E58D-454B-AD1B-F397AF799261}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A61FB3E-E58D-454B-AD1B-F397AF799261}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A61FB3E-E58D-454B-AD1B-F397AF799261}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A61FB3E-E58D-454B-AD1B-F397AF799261}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

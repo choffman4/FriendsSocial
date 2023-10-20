@@ -117,6 +117,16 @@ services:
     networks:
       - friends
 
+  grpc-mongo-messaging-service:
+    build:
+      context: ./GrpcMongoMessagingService
+      dockerfile: Dockerfile
+    container_name: grpc_mongo_messaging_service
+    ports:
+      - "8008:80"
+    networks:
+      - friends
+
   profile-service-api:
     build:
       context: ./ProfileService

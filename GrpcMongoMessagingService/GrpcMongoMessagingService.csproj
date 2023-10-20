@@ -7,11 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\profile.proto" GrpcServices="Server" />
+	  <Protobuf Include="Protos\messaging.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.Kafka" Version="2.2.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
   </ItemGroup>
