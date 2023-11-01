@@ -26,7 +26,7 @@ namespace UserAccountService.Controllers
                 return BadRequest("Invalid request format");
             }
 
-            var response = await _userRepository.RegisterUserAsync(request.Email, request.Password);
+            var response = await _userRepository.RegisterUserAsync(request.Email, request.Password, request.FirstName, request.LastName, request.DateOfBirth, request.Gender);
 
             if (!string.IsNullOrEmpty(response?.Token))
             {
@@ -55,6 +55,41 @@ namespace UserAccountService.Controllers
                 return BadRequest("User login failed");
             }
         }
+
+        //[HttpPost("login")]
+        //public async Task<IActionResult> LoginUserAsync([FromBody] LoginRequest request)
+        //{
+        //    if (request == null)
+        //    {
+        //        return BadRequest("Invalid request format");
+        //    }
+
+        //    var response = await _userRepository.LoginUserAsync(request.Email, request.Password);
+
+        //    if (response != null)
+        //    {
+        //        // Instead of using the JWT token, we're generating a simple session ID or using some other unique value
+        //        var sessionId = Guid.NewGuid().ToString();
+
+        //        var cookieOptions = new CookieOptions
+        //        {
+        //            HttpOnly = true,
+        //            Secure = true,  // Set this to true if you're using HTTPS
+        //            Expires = DateTimeOffset.UtcNow.AddHours(1)  // Set the expiration as per your requirement
+        //        };
+
+        //        // Store the session ID in the cookie
+        //        Response.Cookies.Append("UserSessionId", sessionId, cookieOptions);
+
+        //        // Optionally, store the session ID in some backend store (like a database or cache) 
+        //        // along with the user's details if needed for further checks
+
+        //        return Ok(new { Message = "Login successful" });
+        //    } else
+        //    {
+        //        return BadRequest("User login failed");
+        //    }
+        //}
 
         [HttpPost("logout")]
         [Authorize] // You can add authentication middleware to protect this endpoint.

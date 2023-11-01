@@ -22,8 +22,9 @@ message UpdateProfileRequest {
 	string Occupation = 7;
 	string ExternalLink = 8;
 	string DateOfBirth = 9;
-	string ProfilePictureUrl = 10;
-	string CoverPictureUrl = 11;
+	string Gender = 10;
+	string ProfilePictureUrl = 11;
+	string CoverPictureUrl = 12;
 }
 
 message UpdateProfileResponse {
@@ -44,9 +45,10 @@ message GetProfileByGuidResponse {
 	string Occupation = 7;
 	string ExternalLink = 8;
 	string DateOfBirth = 9;
-	string ProfilePictureUrl = 10;
-	string CoverPictureUrl = 11;
-	string error = 12;
+	string Gender = 10;
+	string ProfilePictureUrl = 11;
+	string CoverPictureUrl = 12;
+	string error = 13;
 }
 
 message GetProfileByUsernameResponse {
@@ -59,9 +61,10 @@ message GetProfileByUsernameResponse {
 	string Occupation = 7;
 	string ExternalLink = 8;
 	string DateOfBirth = 9;
-	string ProfilePictureUrl = 10;
-	string CoverPictureUrl = 11;
-	string error = 12;
+	string Gender = 10;
+	string ProfilePictureUrl = 11;
+	string CoverPictureUrl = 12;
+	string error = 13;
 }
 
 message GetProfileByUsernameRequest {

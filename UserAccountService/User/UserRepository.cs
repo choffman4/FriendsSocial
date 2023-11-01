@@ -23,9 +23,9 @@ namespace UserAccountService.User
             _logger = logger;
         }
 
-        public async Task<RegisterUserResponse> RegisterUserAsync(string email, string password)
+        public async Task<RegisterUserResponse> RegisterUserAsync(string email, string password, string firstName, string lastName, string dateOfBirth, string gender)
         {
-            return await _grpcClient.RegisterUserAsync(new RegisterUserRequest { Email = email, Password = password });
+            return await _grpcClient.RegisterUserAsync(new RegisterUserRequest { Email = email, Password = password, FirstName = firstName, LastName = lastName, DateOfBirth = dateOfBirth, Gender = gender });
         }
 
         public async Task<LoginResponse> LoginUserAsync(string email, string password)

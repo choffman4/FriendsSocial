@@ -1,0 +1,14 @@
+﻿@inherits LayoutComponentBase
+
+<div class="authenticated-layout">
+    <div class="navbar">
+        <!-- Navigation links and user profile dropdown here -->
+        <NavMenu />
+        <!-- Profile dropdown could be another component -->
+        <UserProfileDropdown />
+    </div>
+
+    <div class="content">
+        @Body
+    </div>
+</div>

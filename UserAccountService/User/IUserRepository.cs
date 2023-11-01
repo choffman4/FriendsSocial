@@ -4,7 +4,7 @@ using UserAccountService.User;
 public interface IUserRepository
 {
     // Method for user registration
-    Task<RegisterUserResponse> RegisterUserAsync(string email, string password);
+    Task<RegisterUserResponse> RegisterUserAsync(string email, string password, string firstName, string lastName, string dateOfBirth, string gender);
 
     // Method for user login
     Task<LoginResponse> LoginUserAsync(string email, string password);

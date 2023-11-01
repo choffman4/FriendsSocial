@@ -1,0 +1,164 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.IdentityModel.Tokens.Jwt
+@using System.Text.Json;
+
+@inject HttpClient Http
+@inject Services.TokenService TokenService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h4">Sign Up</MudText>
+        <MudText Typo="Typo.body1">It’s quick and easy.</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="6">
+                <MudTextField @bind-Value="registerModel.firstName" Label="First Name" Variant="Variant.Text" For="@(() => registerModel.firstName)" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField @bind-Value="registerModel.lastName" Label="Last Name" Variant="Variant.Text" For="@(() => registerModel.lastName)" />
+            </MudItem>
+        </MudGrid>
+
+        <MudTextField @bind-Value="registerModel.email" Label="Email" Variant="Variant.Text" For="@(() => registerModel.email)" />
+        <MudTextField @bind-Value="registerModel.password" Label="Password" Variant="Variant.Text" For="@(() => registerModel.password)" InputType="InputType.Password" />
+        <MudTextField @bind-Value="registerModel.confirmPassword" Label="ConfirmPassword" Variant="Variant.Text" For="@(() => registerModel.confirmPassword)" InputType="InputType.Password" />
+        <MudDatePicker Label="Editable with Placeholder" Editable="true" @bind-Date="registerModel.dateOfBirth" Placeholder="Select Date" />
+        <MudRadioGroup @bind-SelectedOption="registerModel.gender">
+            <MudRadio Option="@("Male")" Color="Color.Primary">Male</MudRadio>
+            <MudRadio Option="@("Female")" Color="Color.Secondary">Female</MudRadio>
+        </MudRadioGroup>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SignUp" Variant="Variant.Filled">Sign Up</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private Services.CustomAuthStateProvider CustomAuthState
+    => AuthStateProvider as Services.CustomAuthStateProvider;
+
+    //void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+
+    RegisterUserModel registerModel = new RegisterUserModel();
+
+    public class RegisterUserModel
+    {
+        [Required]
+        public string firstName { get; set; }
+
+        [Required]
+        public string lastName { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string email { get; set; }
+
+        [Required]
+        public string password { get; set; }
+
+        [Required]
+        public string confirmPassword { get; set; }
+
+        [Required]
+        public DateTime? dateOfBirth = DateTime.Today;
+
+        [Required]
+        public string gender { get; set; }
+
+    }
+
+    public class RegisterUserDto
+    {
+        public string firstName { get; set; }
+        public string lastName { get; set; }
+        public string email { get; set; }
+        public string password { get; set; }
+        public string confirmPassword { get; set; }
+        public string dateOfBirth { get; set; }
+        public string gender { get; set; }
+    }
+
+    private RegisterUserDto ConvertToDto(RegisterUserModel model)
+    {
+        return new RegisterUserDto
+            {
+                firstName = model.firstName,
+                lastName = model.lastName,
+                email = model.email,
+                password = model.password,
+                confirmPassword = model.confirmPassword,
+                dateOfBirth = model.dateOfBirth?.ToString("MM-dd-yyyy"),
+                gender = model.gender
+            };
+    }
+
+
+    private async Task SignUp()
+    {
+        // Validate the model
+        if (!IsModelValid())
+        {
+            Console.WriteLine("Please fill in all required fields correctly.");
+            return;
+        }
+
+        string url = "http://localhost:8000/users/register";
+
+        var dto = ConvertToDto(registerModel);
+
+        // Send the registration data to the server
+        var response = await Http.PostAsJsonAsync(url, dto);
+
+        // Handle the server's response
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
+            var extractedToken = jsonResponse["token"];
+
+            await TokenService.SetTokenAsync(extractedToken);
+            CustomAuthState.MarkUserAsAuthenticated();
+
+            // Navigate to dashboard or any other page after successful login
+            NavigationManager.NavigateTo("/home");
+        } else
+        {
+            // Registration failed, display the error message
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error registering: {errorMessage}");
+        }
+    }
+
+
+    private bool IsModelValid()
+    {
+        if (string.IsNullOrEmpty(registerModel.firstName) ||
+            string.IsNullOrEmpty(registerModel.lastName) ||
+            string.IsNullOrEmpty(registerModel.email) ||
+            string.IsNullOrEmpty(registerModel.password) ||
+            string.IsNullOrEmpty(registerModel.confirmPassword) ||
+            !registerModel.dateOfBirth.HasValue ||
+            string.IsNullOrEmpty(registerModel.gender))
+        {
+            return false;
+        }
+
+        if (registerModel.password != registerModel.confirmPassword)
+        {
+            Console.WriteLine("Password and Confirm Password do not match.");
+            return false;
+        }
+
+        // Additional validations can be added here
+
+        return true;
+    }
+
+}

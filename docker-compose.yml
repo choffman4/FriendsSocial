@@ -169,6 +169,16 @@ services:
     networks:
       - friends
 
+  #blazor-app:
+  #  build:
+  #    context: ./FriendsBlazorApp
+  #    dockerfile: Dockerfile
+  #  container_name: friends_blazor_app
+  #  ports: 
+  #   - "8999:80"
+  #  networks:
+  #    - friends
+
 volumes:
   mysql_data:
   mongo_data:

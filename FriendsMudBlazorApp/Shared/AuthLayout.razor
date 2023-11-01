@@ -1,0 +1,103 @@
+﻿@inherits LayoutComponentBase
+@inject IDialogService DialogService
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+@using System.IdentityModel.Tokens.Jwt
+@using System.Text.Json;
+@using System.ComponentModel.DataAnnotations
+
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudDrawer Open="true" Anchor="Anchor.Left" Elevation="0" Variant="@DrawerVariant.Persistent"
+               Color="@Color.Primary" Width="300px">
+        <MudDrawerHeader>
+            <MudButton Size="Size.Large" Variant="Variant.Text">friends</MudButton>
+        </MudDrawerHeader>
+        <NavMenu />
+        <div Class="d-flex flex-1 flex-row">
+            <MudButton @onclick="OpenDialog" FullWidth="true" Class="d-flex justify-start flex-row align-self-end flex-1 py-4 px-4">
+                <MudAvatar Size="Size.Medium">
+                    <MudImage Src="images/toiletvisit.jpg"></MudImage>
+                </MudAvatar>
+                <div Class="d-flex flex-column justify-start">
+                    <MudText Class="px-3" Align="Align.Left" Typo="Typo.h6">
+                        @($"{userProfile?.FirstName} {userProfile?.LastName}")
+                    </MudText>
+                    <MudText Class="px-3" Align="Align.Left">
+                        @($"@{userProfile?.Username}")
+                    </MudText>
+                </div>
+            </MudButton>
+        </div>
+    </MudDrawer>
+    @Body
+</MudLayout>
+
+@code {
+    Profile userProfile = new Profile();
+
+    public class Profile
+    {
+        public string UserId { get; set; }
+        public string Username { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Bio { get; set; }
+        public string HomeTown { get; set; }
+        public string Occupation { get; set; }
+        public string ExternalLink { get; set; }
+        public DateTime JoinedDate { get; set; }
+        public string DateOfBirth { get; set; }
+        public string Gender { get; set; }
+
+        public string ProfilePictureUrl { get; set; }
+        public string CoverPictureUrl { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await GetUserGuidFromTokenAsync();
+        var userGuid = ExtractGuidFromToken(token);
+
+        userProfile = await GetProfileAsync(userGuid);
+    }
+
+    private void OpenDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogService.Show<Dialogs.SignOutDialog>("Do you wish to sign out?", options);
+    }
+
+
+    private async Task<string> GetUserGuidFromTokenAsync()
+    {
+        return await JSRuntime.InvokeAsync<string>("localStorage.getItem", "jwtToken");
+    }
+
+    private string ExtractGuidFromToken(string token)
+    {
+        var jwtHandler = new JwtSecurityTokenHandler();
+        var jwtToken = jwtHandler.ReadJwtToken(token);
+
+        // Assuming the GUID is stored in a claim. Adjust accordingly.
+        var guidClaim = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "nameid");
+
+        return guidClaim?.Value;
+    }
+
+    private async Task<Profile> GetProfileAsync(string userGuid)
+    {
+        var response = await Http.GetAsync($"http://localhost:8002/profile/userid/{userGuid}");
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<Profile>();
+        }
+        return null; // handle the error appropriately
+    }
+
+}

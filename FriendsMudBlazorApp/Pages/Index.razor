@@ -1,0 +1,90 @@
+﻿@page "/"
+
+@inject IDialogService DialogService
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject Services.TokenService TokenService
+@inject AuthenticationStateProvider AuthStateProvider
+
+@using System.IdentityModel.Tokens.Jwt
+@using System.Text.Json;
+@using System.ComponentModel.DataAnnotations
+
+
+
+<MudContainer style="margin-top: 150px">
+    <MudGrid Justify="Justify.Center">
+        <!-- Title and Summary -->
+        <MudItem Class="d-flex flex-column justify-center" Style="width: 500px;">
+            <MudText Typo="Typo.h2">friends</MudText>
+            <MudText Typo="Typo.h5">Connect with friends and the world around you on friends.</MudText>
+        </MudItem>
+
+        <!-- Form -->
+        <MudItem Style="width: 500px;">
+            <EditForm model="@loginModel" OnValidSubmit="LogIn">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField @bind-Value="loginModel.email" Label="email" Variant="Variant.Text" For="@(() => loginModel.email)" />
+                        <MudTextField @bind-Value="loginModel.password" Label="password" Variant="Variant.Text" InputType="InputType.Password" For="@(() => loginModel.password)" />
+                    </MudCardContent>
+                    <MudCardActions Class="d-flex flex-column align-center">
+                        <MudButton ButtonType="ButtonType.Submit" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary">Log In</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Secondary">Forgot Password?</MudButton>
+                        <MudDivider />
+                        <MudButton @onclick="OpenSignUpDialog" Style="margin-top: 10px;" Variant="Variant.Filled" Color="Color.Primary">Create New Account</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    LoginModel loginModel = new LoginModel();
+
+    private Services.CustomAuthStateProvider CustomAuthState
+    => AuthStateProvider as Services.CustomAuthStateProvider;
+
+
+    public class LoginModel
+    {
+        [Required]
+        [EmailAddress]
+        public string email { get; set; }
+
+        [Required]
+        public string password { get; set; }
+    }
+
+    private async Task LogIn()
+    {
+        string url = "http://localhost:8000/users/login";
+
+        var response = await Http.PostAsJsonAsync(url, loginModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
+            var extractedToken = jsonResponse["token"];
+
+            await TokenService.SetTokenAsync(extractedToken);
+            CustomAuthState.MarkUserAsAuthenticated();
+
+            // Navigate to dashboard or any other page after successful login
+            NavigationManager.NavigateTo("/home");
+        } else
+        {
+            // Show error message
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error logging in: {errorMessage}");
+        }
+    }
+
+    private void OpenSignUpDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
+        DialogService.Show<Dialogs.SignUpDialog>("Sign Up", options);
+    }
+}

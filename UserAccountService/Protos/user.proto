@@ -8,6 +8,10 @@ package user;
 message RegisterUserRequest {
     string Email = 1;
     string Password = 2;
+    string FirstName = 3;
+    string LastName = 4;
+    string DateOfBirth = 5;
+    string Gender = 6;
 }
 
 // User registration response message

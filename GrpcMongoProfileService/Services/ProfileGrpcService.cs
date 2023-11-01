@@ -49,6 +49,7 @@ namespace GrpcMongoProfileService.Services
                 existingProfile.Occupation = request.Occupation;
                 existingProfile.ExternalLink = request.ExternalLink;
                 existingProfile.DateOfBirth = request.DateOfBirth;
+                existingProfile.Gender = request.Gender;
                 existingProfile.ProfilePictureUrl = request.ProfilePictureUrl;
                 existingProfile.CoverPictureUrl = request.CoverPictureUrl;
 
@@ -107,6 +108,7 @@ namespace GrpcMongoProfileService.Services
                     Occupation = profile.Occupation == null ? "" : profile.Occupation.ToString(),
                     ExternalLink = profile.ExternalLink == null ? "" : profile.ExternalLink.ToString(),
                     DateOfBirth = profile.DateOfBirth == null ? "" : profile.DateOfBirth.ToString(),
+                    Gender = profile.Gender == null ? "" : profile.Gender.ToString(),
                     ProfilePictureUrl = profile.ProfilePictureUrl == null ? "" : profile.ProfilePictureUrl.ToString(),
                     CoverPictureUrl = profile.CoverPictureUrl == null ? "" : profile.CoverPictureUrl.ToString(),
                     Error = "Success"
@@ -187,6 +189,7 @@ namespace GrpcMongoProfileService.Services
                     Occupation = profile.Occupation == null ? "" : profile.Occupation.ToString(),
                     ExternalLink = profile.ExternalLink == null ? "" : profile.ExternalLink.ToString(),
                     DateOfBirth = profile.DateOfBirth == null ? "" : profile.DateOfBirth.ToString(),
+                    Gender = profile.Gender == null ? "" : profile.Gender.ToString(),
                     ProfilePictureUrl = profile.ProfilePictureUrl == null ? "" : profile.ProfilePictureUrl.ToString(),
                     CoverPictureUrl = profile.CoverPictureUrl == null ? "" : profile.CoverPictureUrl.ToString(),
                     Error = "Success"

@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Pages\Login.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Grpc.Net.Client" Version="2.58.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.12" />
 	 <PackageReference Include="Grpc.Tools" Version="2.58.0" PrivateAssets="All" />
@@ -15,6 +19,18 @@
 
 	<ItemGroup>
 		<Protobuf Include="Protos\messaging.proto" GrpcServices="Client" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <UpToDateCheckInput Remove="Pages\Login.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Pages\Login.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Pages\Login.razor" />
 	</ItemGroup>
 
 </Project>

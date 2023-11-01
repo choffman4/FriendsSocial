@@ -3,6 +3,12 @@ using Microsoft.Extensions.Options;
 using Confluent.Kafka;
 using MongoDB.Driver;
 using MongoKafkaConsumerService.User;
+using MongoDB.Bson.IO;
+using Newtonsoft.Json;
+using System.Text;
+using System.Security.Cryptography;
+using System.Numerics;
+
 
 namespace MongoKafkaConsumerService.Services
 {
@@ -48,20 +54,40 @@ namespace MongoKafkaConsumerService.Services
                     switch (currentTopic)
                     {
                         case "RegisterUser":
-                            var userId = consumeResult.Message.Value;
+                            var userMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<UserProfile>(consumeResult.Message.Value);
 
                             // Check if a profile already exists for this userId
-                            var existingProfile = _profiles.Find(p => p.UserId == userId).FirstOrDefault();
+                            var existingProfile = _profiles.Find(p => p.UserId == userMessage.UserId).FirstOrDefault();
                             if (existingProfile == null)
                             {
-                                // Create a new user profile
-                                var userProfile = new UserProfile(userId);
+                                bool isAValidUsername = false;
+                                string generatedUsername = "";
+                                while(isAValidUsername == false)
+                                {
+                                    // Generate a unique username for the user
+                                    generatedUsername = userMessage.FirstName + GenerateUniquePart(userMessage.FirstName);
+                                    if(await UsernameAlreadyExists(generatedUsername) == false)
+                                    {
+                                        isAValidUsername = true;
+                                    }
+                                }
+                                
+
+                                // Create a new user profile using the deserialized data
+                                var userProfile = new UserProfile(userMessage.UserId)
+                                {
+                                    Username = generatedUsername,
+                                    FirstName = userMessage.FirstName,
+                                    LastName = userMessage.LastName,
+                                    DateOfBirth = userMessage.DateOfBirth,
+                                    Gender = userMessage.Gender
+                                };
 
                                 _profiles.InsertOne(userProfile);
-                                _logger.LogInformation($"Created a user profile for userId: {userId}");
+                                _logger.LogInformation($"Created a user profile for userId: {userMessage.UserId}");
                             } else
                             {
-                                _logger.LogInformation($"Profile already exists for userId: {userId}");
+                                _logger.LogInformation($"Profile already exists for userId: {userMessage.UserId}");
                             }
                             break;
 
@@ -110,6 +136,34 @@ namespace MongoKafkaConsumerService.Services
                 // No need to do anything special here.
             }
         }
+
+        public async Task<bool> UsernameAlreadyExists(string username)
+        {
+            var existingProfile = _profiles.Find(p => p.Username == username).FirstOrDefault();
+            //is the username in use?
+            if(existingProfile != null)
+            {
+                return true;
+            } else //username not in use
+            { return false; }
+        }
+
+        private string GenerateUniquePart(string seed)
+        {
+            // Using a combination of timestamp and a part of UUID
+            string timestamp = DateTime.UtcNow.Ticks.ToString();
+            string uuidPart = Guid.NewGuid().ToString().Substring(0, 4); // taking only the first 4 characters
+
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(seed + timestamp + uuidPart));
+
+                // Convert byte array to BigInteger and then to string
+                BigInteger intRepresentation = new BigInteger(bytes.Reverse().ToArray());
+                return intRepresentation.ToString().Substring(0, 8); // take first 8 characters of the numeric hash
+            }
+        }
+
 
         public override Task StopAsync(CancellationToken stoppingToken)
         {

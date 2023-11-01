@@ -8,13 +8,12 @@ using UserAccountService.User;
 
 using Steeltoe.Discovery.Client;
 using Steeltoe.Discovery.Eureka;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 internal class Program
 {
     private static void Main(string[] args)
     {
-        Console.WriteLine("Hello World");
-
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -35,6 +34,15 @@ internal class Program
                     ValidateIssuerSigningKey = true
                 };
             });
+
+        //builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        //.AddCookie(options =>
+        //{
+        //    options.Cookie.HttpOnly = true;
+        //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        //    options.Cookie.Name = "YourCookieName";
+        //    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        //});
 
         builder.Services.AddAuthorization();
 

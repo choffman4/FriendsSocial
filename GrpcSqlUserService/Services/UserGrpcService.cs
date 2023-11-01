@@ -15,6 +15,7 @@ using System.Data;
 using Confluent.Kafka;
 using Microsoft.Extensions.Options;
 using GrpcSqlUserService.Kafka;
+using Newtonsoft.Json;
 
 namespace GrpcSqlUserService.Services
 {
@@ -72,7 +73,7 @@ namespace GrpcSqlUserService.Services
 
                 await connection.CloseAsync();
 
-                await SendToKafka(userId);
+                await SendToKafka(userId, request.FirstName, request.LastName, request.DateOfBirth, request.Gender);
 
                 var jwtToken = GenerateJwtToken(userId);
                 return new RegisterUserResponse { Token = jwtToken };
@@ -284,13 +285,23 @@ namespace GrpcSqlUserService.Services
             return tokenHandler.WriteToken(token);
         }
 
-        private async Task SendToKafka(string userId)
+        private async Task SendToKafka(string userId, string firstName, string lastName, string dateOfBirth, string gender)
         {
             try
             {
-                await _kafkaProducer.ProduceAsync("RegisterUser", new Message<string, string> { Key = null, Value = userId });
+                var userData = new
+                {
+                    UserId = userId,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    DateOfBirth = dateOfBirth,
+                    Gender = gender
+                };
+
+                string messageValue = JsonConvert.SerializeObject(userData);
+
+                await _kafkaProducer.ProduceAsync("RegisterUser", new Message<string, string> { Key = null, Value = messageValue });
                 _logger.LogInformation("Message sent to Kafka.");
-                //_kafkaProducer.Flush(TimeSpan.FromSeconds(10));
             } catch (ProduceException<Null, string> ex)
             {
                 _logger.LogError(ex, "Error occurred while sending message to Kafka.");

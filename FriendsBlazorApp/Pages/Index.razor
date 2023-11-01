@@ -1,0 +1,44 @@
+﻿@page "/"
+@using System.ComponentModel.DataAnnotations
+
+<MudContainer style="margin-top: 150px">
+    <MudGrid Justify="Justify.Center">
+        <!-- Title and Summary -->
+        <MudItem Class="d-flex flex-column justify-center">
+            <h1>friends</h1>
+            <p>Connect with friends and the world around you on friends.</p>
+        </MudItem>
+
+        <!-- Form -->
+        <MudItem Style="width: 500px;">
+            <EditForm model="@loginModel">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField @bind-Value="loginModel.email" Label="email" Variant="Variant.Text" For="@(() => loginModel.email)" />
+                        <MudTextField @bind-Value="loginModel.password" Label="password" Variant="Variant.Text" InputType="InputType.Password" For="@(() => loginModel.password)" />
+                    </MudCardContent>
+                    <MudCardActions Class="d-flex flex-column align-center">
+                        <MudButton ButtonType="ButtonType.Submit" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary">Log In</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Secondary">Forgot Password?</MudButton>
+                        <MudDivider />
+                        <MudButton Style="margin-top: 10px;" Variant="Variant.Filled" Color="Color.Primary">Create New Account</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    LoginModel loginModel = new LoginModel();
+
+    public class LoginModel
+    {
+        [Required]
+        [EmailAddress]
+        public string email { get; set; }
+
+        [Required]
+        public string password { get; set; }
+    }
+}
