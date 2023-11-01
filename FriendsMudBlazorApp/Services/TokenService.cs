@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace FriendsMudBlazorApp.Services
@@ -10,10 +11,14 @@ namespace FriendsMudBlazorApp.Services
         private const string UserGuidKey = "userGuid";
         private const string ExpiryKey = "expiryTime";
 
-        public TokenService(IJSRuntime jsRuntime)
+        private readonly AuthenticationStateProvider _authStateProvider;
+
+        public TokenService(AuthenticationStateProvider authStateProvider, IJSRuntime jsRuntime)
         {
             _jsRuntime = jsRuntime;
+            _authStateProvider = authStateProvider;
         }
+
 
         public async Task SetTokenAsync(string token)
         {
@@ -50,6 +55,13 @@ namespace FriendsMudBlazorApp.Services
                     await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
                     await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", UserGuidKey);
                     await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", ExpiryKey);
+
+                    // We also need to clear the authentication state.
+                    if (_authStateProvider is CustomAuthStateProvider customProvider)
+                    {
+                        customProvider.MarkUserAsLoggedOut();
+                    }
+
                 }
             }
         }

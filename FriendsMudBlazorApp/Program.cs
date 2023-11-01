@@ -21,8 +21,9 @@ namespace FriendsMudBlazorApp
             builder.Services.AddServerSideBlazor();
             builder.Services.AddScoped<HttpClient>();
             builder.Services.AddMudServices();
-            builder.Services.AddScoped<TokenService>();
+            
             builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
+            builder.Services.AddScoped<TokenService>();
 
 
             var app = builder.Build();

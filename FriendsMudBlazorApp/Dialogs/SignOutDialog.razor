@@ -19,8 +19,9 @@
 
     async void Submit()
     {
-        await TokenService.ClearExpiredDataAsync(); // Assuming this method will clear the token and userGuid
         CustomAuthState.MarkUserAsAuthenticated();
+        await TokenService.ClearExpiredDataAsync(); // Assuming this method will clear the token and userGuid
+        
 
         NavigationManager.NavigateTo("/"); // Redirect to login or any other page
         MudDialog.Close(DialogResult.Ok(true));
