@@ -28,16 +28,30 @@ namespace PostingService.Post
 
         public async Task<CreatePostResponse> CreatePostAsync(CreatePostRequest request)
         {
+            _logger.LogInformation("CreatePostAsync called with request: {@Request}", request);
+
             try
             {
+                _logger.LogInformation("Creating gRPC channel with host: {Host} and port: {Port}", _configuration["GrpcService:Host"], _configuration["GrpcService:Port"]);
                 var response = await _grpcClient.CreatePostAsync(request);
+                _logger.LogInformation("gRPC call successful, response received.");
                 return response;
             } catch (RpcException ex)
             {
-                // Handle exceptions (e.g., gRPC communication errors) here
-                throw ex;
+                _logger.LogError("gRPC error calling CreatePostAsync: {StatusCode} - {Message}", ex.StatusCode, ex.Message);
+                if (ex.Status.Detail != null)
+                {
+                    _logger.LogError("gRPC error detail: {Detail}", ex.Status.Detail);
+                }
+
+                throw new Exception($"An error occurred while calling the gRPC service: {ex.Message}", ex);
+            } catch (Exception ex)
+            {
+                _logger.LogError("An unexpected error occurred: {Message}", ex.Message);
+                throw;
             }
         }
+
 
         public async Task<GetPostByIdResponse> GetPostByIdAsync(GetPostByIdRequest request)
         {

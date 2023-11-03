@@ -12,7 +12,7 @@ namespace PostingService.Controllers
         private readonly IPostRepository _postRepository;
 
         [HttpGet("GetPosts")]
-        public async Task<ActionResult<GetPostsResponse>> GetPosts([FromQuery] GetPostsRequest request)
+        public async Task<ActionResult<GetPostsResponse>> GetPosts([FromBody] GetPostsRequest request)
         {
             try
             {
