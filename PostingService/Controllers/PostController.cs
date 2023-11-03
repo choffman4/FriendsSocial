@@ -11,6 +11,11 @@ namespace PostingService.Controllers
     {
         private readonly IPostRepository _postRepository;
 
+        public PostController(IPostRepository postRepository)
+        {
+            _postRepository = postRepository;
+        }
+
         [HttpGet("GetPosts")]
         public async Task<ActionResult<GetPostsResponse>> GetPosts([FromBody] GetPostsRequest request)
         {
