@@ -567,5 +567,90 @@ namespace GrpcMongoPostingService.Services
             }
         }
 
+
+        public override async Task<GetPostsResponse> GetPosts(GetPostsRequest request, ServerCallContext context)
+        {
+            try
+            {
+                // Connect to your MongoDB databases
+                var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
+                var profileFriendsDatabase = mongoClient.GetDatabase("profileFriends");
+                var postsDatabase = mongoClient.GetDatabase("profilePosts");
+
+                var friendshipsCollection = profileFriendsDatabase.GetCollection<Friendship>("friendships");
+                var postCollection = postsDatabase.GetCollection<Post>("posts");
+
+                // Step 1: Fetch the list of friends for the user
+                var friendFilter = Builders<Friendship>.Filter.Or(
+                    Builders<Friendship>.Filter.Eq(f => f.Friend1Id, request.UserId),
+                    Builders<Friendship>.Filter.Eq(f => f.Friend2Id, request.UserId)
+                );
+
+                var friendships = await friendshipsCollection.Find(friendFilter).ToListAsync();
+
+                var friendIds = friendships.Select(f =>
+                    f.Friend1Id == request.UserId ? f.Friend2Id : f.Friend1Id
+                ).ToList();
+
+                // Include the user's posts as well
+                friendIds.Add(request.UserId);
+
+                // Step 2 & 3: Prepare the post filter based on the friend IDs and pagination details
+                var postFilter = Builders<Post>.Filter.In(p => p.UserId, friendIds);
+                if (!string.IsNullOrEmpty(request.LastPostId))
+                {
+                    postFilter &= Builders<Post>.Filter.Gt(p => p.PostId, request.LastPostId);
+                } else if (!string.IsNullOrEmpty(request.LastPostTimestamp))
+                {
+                    var lastPostDate = DateTime.Parse(request.LastPostTimestamp);
+                    postFilter &= Builders<Post>.Filter.Gt(p => p.PostedDate, lastPostDate);
+                }
+
+                // Step 4: Fetch the posts with pagination
+                var posts = await postCollection.Find(postFilter)
+                                                 .SortByDescending(p => p.PostedDate)
+                                                 .Limit(request.Limit)
+                                                 .ToListAsync();
+
+                // Step 5: Prepare the response
+                var response = new GetPostsResponse();
+
+                foreach (var post in posts)
+                {
+                    var postResponse = new PostObject
+                    {
+                        PostId = post.PostId,
+                        UserId = post.UserId,
+                        Title = post.Title,
+                        Content = post.Content,
+                        Date = post.PostedDate.ToString(),
+                        ChildCommentIds = { post.ChildCommentIds },
+                        Likes = { post.UserIdLikes } // Changed from 'Likes' to 'UserIdLikes'
+                    };
+
+                    response.Posts.Add(postResponse);
+                }
+
+                // Set the last post's ID and timestamp for pagination in the next request
+                if (posts.Any())
+                {
+                    var lastPost = posts.Last();
+                    response.LastPostId = lastPost.PostId;
+                    response.LastPostTimestamp = lastPost.PostedDate.ToString();
+                }
+
+                return response;
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching paginated posts.");
+                return new GetPostsResponse
+                {
+                    Message = "Error occurred while fetching paginated posts."
+                };
+            }
+        }
+
+
+
     }
 }

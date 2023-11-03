@@ -26,7 +26,7 @@
                 </MudAvatar>
                 <div Class="d-flex flex-column justify-start">
                     <MudText Class="px-3" Align="Align.Left" Typo="Typo.h6">
-                        @($"{userProfile?.FirstName} {userProfile?.LastName}")
+                        @($"{userProfile?.FirstName}")
                     </MudText>
                     <MudText Class="px-3" Align="Align.Left">
                         @($"@{userProfile?.Username}")
@@ -78,6 +78,7 @@
     {
         return await JSRuntime.InvokeAsync<string>("localStorage.getItem", "jwtToken");
     }
+
 
     private string ExtractGuidFromToken(string token)
     {

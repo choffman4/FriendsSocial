@@ -211,5 +211,18 @@ namespace PostingService.Post
                 throw;
             }
         }
+
+        public async Task<GetPostsResponse> GetPostsAsync(GetPostsRequest request)
+        {
+            try
+            {
+                var response = await _grpcClient.GetPostsAsync(request); // Ensure this method is asynchronous
+                return response;
+            } catch (RpcException ex)
+            {
+                throw ex;
+            }
+        }
+
     }
 }

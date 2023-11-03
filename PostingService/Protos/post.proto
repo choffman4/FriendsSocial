@@ -8,6 +8,7 @@ package post;
 service MongoPostingService {
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
     rpc GetPostById(GetPostByIdRequest) returns (GetPostByIdResponse);
+    rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
 
     rpc GetAllPostsByUserId(GetAllPostsByUserIdRequest) returns (stream GetAllPostsByUserIdResponse);
     rpc EditPost(EditPostRequest) returns (EditPostResponse);
@@ -19,6 +20,33 @@ service MongoPostingService {
     rpc AddCommentToComment(AddCommentToCommentRequest) returns (AddCommentToCommentResponse);
     rpc EditComment(EditCommentRequest) returns (EditCommentResponse);
     rpc GetComment(GetCommentRequest) returns (GetCommentResponse);
+}
+
+// Request message for fetching paginated posts
+message GetPostsRequest {
+    string userId = 1;                 // ID of the user making the request
+    string lastPostId = 2;            // ID of the last post received in the previous batch
+    string lastPostTimestamp = 3;     // Timestamp of the last post received in the previous batch
+    int32 limit = 4;                  // Number of posts to fetch in a batch, e.g., 15
+}
+
+// Individual post message structure
+message PostObject {
+    string postId = 1;
+    string userId = 2;
+    string title = 3;
+    string content = 4;
+    string date = 5;
+    repeated string childCommentIds = 6;
+    repeated string likes = 7;
+}
+
+// Response message for the paginated posts
+message GetPostsResponse {
+    repeated PostObject posts = 1;          // List of posts in the current batch
+    string lastPostId = 2;            // ID of the last post in the current batch
+    string lastPostTimestamp = 3;     // Timestamp of the last post in the current batch
+    string message = 4;               // Optional status or error message
 }
 
 message GetCommentRequest {
@@ -65,12 +93,13 @@ message GetAllPostsByUserIdRequest {
 
 message GetAllPostsByUserIdResponse {
     string userid = 1;
-    string title = 2;
-    string content = 3;
-    string date = 4;
-    repeated string childCommentIds = 5;
-    repeated string likes = 6;
-    string message = 7;
+    string postid = 2;
+    string title = 3;
+    string content = 4;
+    string date = 5;
+    repeated string childCommentIds = 6;
+    repeated string likes = 7;
+    string message = 8;
 }
 
 message EditPostRequest {

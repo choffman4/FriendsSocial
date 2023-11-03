@@ -16,5 +16,7 @@ namespace PostingService.Post
         Task<AddCommentToCommentResponse> AddCommentToCommentAsync(AddCommentToCommentRequest request);
         Task<EditCommentResponse> EditCommentAsync(EditCommentRequest request);
         Task<GetCommentResponse> GetCommentAsync(GetCommentRequest request);
+        Task<GetPostsResponse> GetPostsAsync(GetPostsRequest request);
+
     }
 }

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using System.Text;
 using System.Security.Cryptography;
 using System.Numerics;
-
+using Microsoft.AspNetCore.Mvc;
 
 namespace MongoKafkaConsumerService.Services
 {
@@ -65,7 +65,7 @@ namespace MongoKafkaConsumerService.Services
                                 while(isAValidUsername == false)
                                 {
                                     // Generate a unique username for the user
-                                    generatedUsername = userMessage.FirstName + GenerateUniquePart(userMessage.FirstName);
+                                    generatedUsername = userMessage.FirstName.Trim() + GenerateUniquePart(userMessage.FirstName.Trim());
                                     if(await UsernameAlreadyExists(generatedUsername) == false)
                                     {
                                         isAValidUsername = true;
@@ -77,8 +77,8 @@ namespace MongoKafkaConsumerService.Services
                                 var userProfile = new UserProfile(userMessage.UserId)
                                 {
                                     Username = generatedUsername,
-                                    FirstName = userMessage.FirstName,
-                                    LastName = userMessage.LastName,
+                                    FirstName = userMessage.FirstName.Trim(),
+                                    LastName = userMessage.LastName.Trim(),
                                     DateOfBirth = userMessage.DateOfBirth,
                                     Gender = userMessage.Gender
                                 };
@@ -160,7 +160,11 @@ namespace MongoKafkaConsumerService.Services
 
                 // Convert byte array to BigInteger and then to string
                 BigInteger intRepresentation = new BigInteger(bytes.Reverse().ToArray());
-                return intRepresentation.ToString().Substring(0, 8); // take first 8 characters of the numeric hash
+
+                Random random = new Random();
+                int tempNum = random.Next(0, 9);
+
+                return intRepresentation.ToString().Substring(0, 8).Replace('-', tempNum.ToString()[0]); // take first 8 characters of the numeric hash, replcae any hyphens with a random number
             }
         }
 

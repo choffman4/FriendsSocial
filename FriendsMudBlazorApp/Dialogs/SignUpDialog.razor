@@ -90,9 +90,9 @@
     {
         return new RegisterUserDto
             {
-                firstName = model.firstName,
-                lastName = model.lastName,
-                email = model.email,
+                firstName = model.firstName.Trim(),
+                lastName = model.lastName.Trim(),
+                email = model.email.Trim(),
                 password = model.password,
                 confirmPassword = model.confirmPassword,
                 dateOfBirth = model.dateOfBirth?.ToString("MM-dd-yyyy"),

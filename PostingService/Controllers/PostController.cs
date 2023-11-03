@@ -1,4 +1,5 @@
-﻿using GrpcMongoPostingService;
+﻿using Grpc.Core;
+using GrpcMongoPostingService;
 using Microsoft.AspNetCore.Mvc;
 using PostingService.Post;
 
@@ -10,9 +11,26 @@ namespace PostingService.Controllers
     {
         private readonly IPostRepository _postRepository;
 
-        public PostController(IPostRepository postRepository)
+        [HttpGet("GetPosts")]
+        public async Task<ActionResult<GetPostsResponse>> GetPosts([FromQuery] GetPostsRequest request)
         {
-            _postRepository = postRepository;
+            try
+            {
+                var response = await _postRepository.GetPostsAsync(request);
+                if (response == null)
+                {
+                    return NotFound();
+                }
+                return Ok(response);
+            } catch (RpcException ex)
+            {
+                // Log the exception details, etc.
+                return StatusCode((int)ex.StatusCode, ex.Status.Detail);
+            } catch (Exception ex)
+            {
+                // Log the exception details, handle the error appropriately
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
         [HttpPost("CreatePost")]
