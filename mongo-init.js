@@ -2,7 +2,7 @@
 dbProfile = db.getSiblingDB('profileDatabase');
 dbPosts = db.getSiblingDB('profilePosts');
 dbFriends = db.getSiblingDB('profileFriends');
-dbMessages = db.getSiblingDB('messagesDB');)
+dbMessages = db.getSiblingDB('messagesDB');
 
 //create collections
 dbProfile.createCollection("profiles");

@@ -27,8 +27,8 @@ namespace PostingService.Post
             CommentId = Guid.NewGuid().ToString();
             UserId = userid;
             Content = content;
-            CommentedDate = DateTime.UtcNow.Date;
-            LastEditedDate = DateTime.UtcNow.Date;
+            CommentedDate = DateTime.UtcNow;
+            LastEditedDate = DateTime.UtcNow;
             UserIdLikes = new List<String>();
             ChildCommentIds = new List<String>();
         }

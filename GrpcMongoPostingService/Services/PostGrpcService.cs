@@ -1,6 +1,8 @@
 ﻿using Grpc.Core;
 using MongoDB.Driver;
 using GrpcMongoPostingService.PostProperties;
+using MongoDB.Bson;
+using System.Globalization;
 
 namespace GrpcMongoPostingService.Services
 {
@@ -185,7 +187,7 @@ namespace GrpcMongoPostingService.Services
                 existingPost.Title = request.Title;
                 existingPost.Content = request.Content;
                 existingPost.PrivacyType = request.PrivacyType;
-                existingPost.LastEditedDate = DateTime.Now.Date;
+                existingPost.LastEditedDate = DateTime.UtcNow;
 
                 // Update the post in the database
                 var updateResult = await collection.ReplaceOneAsync(filter, existingPost);
@@ -572,7 +574,6 @@ namespace GrpcMongoPostingService.Services
         {
             try
             {
-                // Connect to your MongoDB databases
                 var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
                 var profileFriendsDatabase = mongoClient.GetDatabase("profileFriends");
                 var postsDatabase = mongoClient.GetDatabase("profilePosts");
@@ -580,63 +581,56 @@ namespace GrpcMongoPostingService.Services
                 var friendshipsCollection = profileFriendsDatabase.GetCollection<Friendship>("friendships");
                 var postCollection = postsDatabase.GetCollection<Post>("posts");
 
-                // Step 1: Fetch the list of friends for the user
+                _logger.LogInformation("UserId: {UserId}", request.UserId);
+
                 var friendFilter = Builders<Friendship>.Filter.Or(
-                    Builders<Friendship>.Filter.Eq(f => f.Friend1Id, request.UserId),
-                    Builders<Friendship>.Filter.Eq(f => f.Friend2Id, request.UserId)
+                    Builders<Friendship>.Filter.Eq(f => f.friend1Id, request.UserId),
+                    Builders<Friendship>.Filter.Eq(f => f.friend2Id, request.UserId)
                 );
 
                 var friendships = await friendshipsCollection.Find(friendFilter).ToListAsync();
-
-                var friendIds = friendships.Select(f =>
-                    f.Friend1Id == request.UserId ? f.Friend2Id : f.Friend1Id
-                ).ToList();
-
-                // Include the user's posts as well
+                var friendIds = friendships.Select(f => f.friend1Id == request.UserId ? f.friend2Id : f.friend1Id).ToList();
                 friendIds.Add(request.UserId);
 
-                // Step 2 & 3: Prepare the post filter based on the friend IDs and pagination details
                 var postFilter = Builders<Post>.Filter.In(p => p.UserId, friendIds);
+
+                // Use the lastPostId to filter posts if provided
                 if (!string.IsNullOrEmpty(request.LastPostId))
                 {
-                    postFilter &= Builders<Post>.Filter.Gt(p => p.PostId, request.LastPostId);
-                } else if (!string.IsNullOrEmpty(request.LastPostTimestamp))
-                {
-                    var lastPostDate = DateTime.Parse(request.LastPostTimestamp);
-                    postFilter &= Builders<Post>.Filter.Gt(p => p.PostedDate, lastPostDate);
+                    var lastPostObjectId = new ObjectId(request.LastPostId);
+                    postFilter &= Builders<Post>.Filter.Lt(p => p.Id, lastPostObjectId);
                 }
 
-                // Step 4: Fetch the posts with pagination
+                // Fetch the posts with pagination
                 var posts = await postCollection.Find(postFilter)
-                                                 .SortByDescending(p => p.PostedDate)
-                                                 .Limit(request.Limit)
-                                                 .ToListAsync();
+                                                .SortByDescending(p => p.PostedDate)
+                                                .ThenByDescending(p => p.Id)
+                                                .Limit(request.Limit)
+                                                .ToListAsync();
 
-                // Step 5: Prepare the response
                 var response = new GetPostsResponse();
-
                 foreach (var post in posts)
                 {
                     var postResponse = new PostObject
                     {
-                        PostId = post.PostId,
+                        PostId = post.PostId.ToString(),
                         UserId = post.UserId,
                         Title = post.Title,
                         Content = post.Content,
-                        Date = post.PostedDate.ToString(),
+                        Date = post.PostedDate.ToString("o", CultureInfo.InvariantCulture),
                         ChildCommentIds = { post.ChildCommentIds },
-                        Likes = { post.UserIdLikes } // Changed from 'Likes' to 'UserIdLikes'
+                        Likes = { post.UserIdLikes.Select(id => id.ToString()) }
                     };
 
                     response.Posts.Add(postResponse);
                 }
 
-                // Set the last post's ID and timestamp for pagination in the next request
+                // Set the lastPostId to the ObjectId of the last post
                 if (posts.Any())
                 {
                     var lastPost = posts.Last();
-                    response.LastPostId = lastPost.PostId;
-                    response.LastPostTimestamp = lastPost.PostedDate.ToString();
+                    response.LastPostId = lastPost.Id.ToString(); // Convert the ObjectId to a string
+                    response.LastPostTimestamp = lastPost.PostedDate.ToString("o", CultureInfo.InvariantCulture);
                 }
 
                 return response;
@@ -649,8 +643,6 @@ namespace GrpcMongoPostingService.Services
                 };
             }
         }
-
-
 
     }
 }

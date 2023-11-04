@@ -4,8 +4,8 @@
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-@inject Services.TokenService TokenService
 @inject AuthenticationStateProvider AuthStateProvider
+@inject ILocalStorageService LocalStorage
 
 @using System.IdentityModel.Tokens.Jwt
 @using System.Text.Json;
@@ -44,10 +44,6 @@
 @code {
     LoginModel loginModel = new LoginModel();
 
-    private Services.CustomAuthStateProvider CustomAuthState
-    => AuthStateProvider as Services.CustomAuthStateProvider;
-
-
     public class LoginModel
     {
         [Required]
@@ -69,8 +65,8 @@
             var jsonResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
             var extractedToken = jsonResponse["token"];
 
-            await TokenService.SetTokenAsync(extractedToken);
-            CustomAuthState.MarkUserAsAuthenticated();
+            await LocalStorage.SetItemAsync("token", extractedToken);
+            await AuthStateProvider.GetAuthenticationStateAsync();
 
             // Navigate to dashboard or any other page after successful login
             NavigationManager.NavigateTo("/home");

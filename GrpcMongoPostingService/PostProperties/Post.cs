@@ -26,12 +26,13 @@ namespace GrpcMongoPostingService.PostProperties
             UserId = userid;
             Title = title;
             Content = content;
-            PrivacyType = privacyType;    
+            PrivacyType = privacyType;
             PostId = Guid.NewGuid().ToString();
-            PostedDate = DateTime.UtcNow.Date;
-            LastEditedDate = DateTime.UtcNow.Date;
+            PostedDate = DateTime.UtcNow;
+            LastEditedDate = DateTime.UtcNow;
             UserIdLikes = new List<String>();
             ChildCommentIds = new List<String>();
         }
+
     }
 }

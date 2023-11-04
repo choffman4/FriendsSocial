@@ -1,6 +1,8 @@
-﻿@inject Services.TokenService TokenService
-@inject NavigationManager NavigationManager
+﻿@inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
+
+
 
 <MudDialog>
     <DialogActions>
@@ -13,15 +15,8 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
 
-    private Services.CustomAuthStateProvider CustomAuthState
-    => AuthStateProvider as Services.CustomAuthStateProvider;
-
-
     async void Submit()
     {
-        CustomAuthState.MarkUserAsAuthenticated();
-        await TokenService.ClearExpiredDataAsync(); // Assuming this method will clear the token and userGuid
-        
 
         NavigationManager.NavigateTo("/"); // Redirect to login or any other page
         MudDialog.Close(DialogResult.Ok(true));

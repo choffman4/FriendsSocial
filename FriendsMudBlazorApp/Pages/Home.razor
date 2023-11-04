@@ -1,6 +1,13 @@
 ﻿@page "/home"
 @attribute [Authorize]
 @layout AuthLayout
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+@using System.IdentityModel.Tokens.Jwt
+@using System.Text.Json
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Web.Virtualization
 
 <MudDrawer Open="true" Anchor="Anchor.Right" Elevation="0" Variant="@DrawerVariant.Persistent"
            Color="@Color.Primary" Width="300px">
@@ -10,8 +17,123 @@
 </MudDrawer>
 
 <MudAppBar Color="Color.Primary">
+    <!-- AppBar content here -->
 </MudAppBar>
 
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    <MudTable Items="_posts" Breakpoint="Breakpoint.Sm" Virtualize="true" FixedHeader="true">
+        <HeaderContent>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <div style="height: 300px; overflow-y: auto;">
+                    <MudText>@context.Username</MudText>
+                    <MudText>@context.Content</MudText>
+                    <MudText>@context.Date</MudText>
+                    <MudButton>Like</MudButton>
+                    <MudButton>Comment</MudButton>
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
 
 
+
+@code {
+    private List<Post> _posts = new();
+    private string _lastPostId = "";
+    private string _lastPostTimestamp = "";
+    private bool isLoading = false;
+    private bool hasMorePosts = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMorePosts();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("detectScrollBottom", dotNetHelper);
+        }
+    }
+
+    [JSInvokable]
+    public async Task LoadMorePosts()
+    {
+        if (isLoading || !hasMorePosts) return; // Exit if a load operation is already in progress or no more posts
+
+        isLoading = true; // Set the flag to indicate that a load operation is starting.
+
+        try
+        {
+            var userId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userGuid");
+            var requestUri = "http://localhost:8006/post/GetPosts";
+
+            var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri(requestUri),
+                    Content = JsonContent.Create(new
+                    {
+                        userId = userId,
+                        lastPostId = _lastPostId,
+                        lastPostTimestamp = _lastPostTimestamp,
+                        limit = 4
+                    })
+                };
+
+            var response = await Http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var postsResponse = await response.Content.ReadFromJsonAsync<GetPostsResponse>();
+                if (postsResponse.Posts.Count == 0)
+                {
+                    hasMorePosts = false; // No more posts to load
+                                          // Optionally, you can also inform the user that they've reached the end
+                } else
+                {
+                    _posts.AddRange(postsResponse.Posts);
+                    _lastPostId = postsResponse.LastPostId;
+                    _lastPostTimestamp = postsResponse.LastPostTimestamp;
+                }
+                StateHasChanged();
+            } else
+            {
+                // Handle error
+                hasMorePosts = false; // Assume no more posts if there's an error
+            }
+        } finally
+        {
+            isLoading = false; // Reset the flag when the load operation is complete.
+        }
+    }
+
+
+    public class Post
+    {
+        public string Username { get; set; }
+        public string Content { get; set; }
+        public string Date { get; set; }
+    }
+
+    public class GetPostsResponse
+    {
+        public List<Post> Posts { get; set; }
+        public string LastPostId { get; set; }
+        public string LastPostTimestamp { get; set; }
+        public string Message { get; set; }
+    }
+}
+
+@if (!hasMorePosts && _posts.Count > 0)
+{
+    <div class="end-of-posts-message">
+        You've reached the end of the posts.
+    </div>
+}
 

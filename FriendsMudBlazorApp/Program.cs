@@ -1,7 +1,8 @@
+global using Microsoft.AspNetCore.Components.Authorization;
+global using Blazored.LocalStorage;
 using FriendsMudBlazorApp.Data;
 using FriendsMudBlazorApp.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using MudBlazor.Services;
@@ -21,10 +22,9 @@ namespace FriendsMudBlazorApp
             builder.Services.AddServerSideBlazor();
             builder.Services.AddScoped<HttpClient>();
             builder.Services.AddMudServices();
-            
-            builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
-            builder.Services.AddScoped<TokenService>();
-
+            builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+            builder.Services.AddAuthorizationCore();
+            builder.Services.AddBlazoredLocalStorage();
 
             var app = builder.Build();
 

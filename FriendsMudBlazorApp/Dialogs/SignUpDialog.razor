@@ -3,9 +3,9 @@
 @using System.Text.Json;
 
 @inject HttpClient Http
-@inject Services.TokenService TokenService
 @inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
+
 
 <MudDialog>
     <TitleContent>
@@ -40,9 +40,6 @@
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-
-    private Services.CustomAuthStateProvider CustomAuthState
-    => AuthStateProvider as Services.CustomAuthStateProvider;
 
     //void Submit() => MudDialog.Close(DialogResult.Ok(true));
     void Cancel() => MudDialog.Cancel();
@@ -123,8 +120,6 @@
             var jsonResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
             var extractedToken = jsonResponse["token"];
 
-            await TokenService.SetTokenAsync(extractedToken);
-            CustomAuthState.MarkUserAsAuthenticated();
 
             // Navigate to dashboard or any other page after successful login
             NavigationManager.NavigateTo("/home");

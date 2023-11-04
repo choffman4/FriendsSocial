@@ -8,7 +8,8 @@ namespace GrpcMongoPostingService.PostProperties
         [BsonId]
         public ObjectId Id { get; set; }
 
-        public string Friend1Id { get; set; }
-        public string Friend2Id { get; set; }
+        public string friendshipId { get; set; }
+        public string friend1Id { get; set; }
+        public string friend2Id { get; set; }
     }
 }
