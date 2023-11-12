@@ -26,6 +26,7 @@ namespace FriendsMudBlazorApp
             builder.Services.AddAuthorizationCore();
             builder.Services.AddBlazoredLocalStorage();
 
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

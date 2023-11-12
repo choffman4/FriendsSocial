@@ -1,0 +1,147 @@
+﻿@page "/post/{PostId}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+@layout AuthLayout
+@inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
+@inject ILocalStorageService LocalStorage
+
+@using System.IdentityModel.Tokens.Jwt
+@using System.Text.Json
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+
+<RightDrawer />
+<SearchBar />
+
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    <MudPaper Elevation="1" Class="my-2 p-3">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Text" OnClick="() => NavigateToUserProfile(post.userid)">
+                    @post.userid
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="6" Class="text-right">
+                <MudText Typo="Typo.h6">@post.date</MudText>
+            </MudItem>
+        </MudGrid>
+        <MudText>@post.content</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudButton Color="Color.Primary" OnClick="() => LikePost()">
+                    Like (@post.likes.Count)
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="6" Class="text-right">
+                <MudButton Color="Color.Secondary" OnClick="() => OpenCommentDialog()">
+                    Comment (@post.childCommentIds.Count)
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private PostObject post = new(); // Assume this will be assigned the fetched post data
+    public PostModel model;
+
+    [Parameter]
+    public string PostId { get; set; }
+
+    private string _userProfileName;
+
+    public class PostModel
+    {
+        public string id;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        model = new PostModel() { id = PostId };
+
+
+        //await FetchUserProfileName();
+
+        await LoadPost();
+    }
+
+    private async Task FetchUserProfileName(string userId)
+    {
+        string url = $"http://localhost:8002/profile/userid/{userId}";
+        try
+        {
+            var response = await Http.GetFromJsonAsync<UserProfile>(url);
+            if (response != null)
+            {
+                _userProfileName = response.Username;
+                // You might want to store other profile data as needed
+            }
+        } catch (HttpRequestException e)
+        {
+            // Handle any errors that occur during the request
+            Console.WriteLine($"Error fetching user profile: {e.Message}");
+        }
+    }
+
+    public class UserProfile
+    {
+        public string Username { get; set; }
+        // ... other profile properties as needed
+    }
+
+    private async Task LoadPost()
+    {
+        var requestUri = "http://localhost:8006/post/GetPostById";
+        var requestContent = JsonContent.Create(new { postid = PostId });
+
+        var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri(requestUri),
+                Content = requestContent
+            };
+
+        var response = await Http.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            post = await response.Content.ReadFromJsonAsync<PostObject>();
+            // Now post has the data, and you can display it as needed.
+        } else
+        {
+            // Handle the error, maybe show a message to the user.
+        }
+    }
+
+
+    private void NavigateToUserProfile(string userId)
+    {
+        // Logic to navigate to the user's profile
+        NavigationManager.NavigateTo($"/userprofile/{userId}");
+    }
+
+    private void LikePost()
+    {
+        // Logic to handle like functionality for the current post
+    }
+
+    private void OpenCommentDialog()
+    {
+        // Logic to open a comment dialog for the current post
+        var parameters = new DialogParameters { ["Post"] = post };
+        DialogService.Show<Dialogs.CommentDialog>("", parameters);
+    }
+
+    // Assuming Post class is defined elsewhere
+    public class PostObject
+    {
+        public string userid { get; set; }
+        public string content { get; set; }
+        public string date { get; set; }
+        public List<string> childCommentIds { get; set; } = new List<string>();
+        public List<string> likes { get; set; } = new List<string>();
+    }
+}

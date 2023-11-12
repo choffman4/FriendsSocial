@@ -2,6 +2,8 @@
 @inject IDialogService DialogService
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILocalStorageService LocalStorage
 
 @using System.IdentityModel.Tokens.Jwt
 @using System.Text.Json;
@@ -19,6 +21,7 @@
             <MudButton Size="Size.Large" Variant="Variant.Text">friends</MudButton>
         </MudDrawerHeader>
         <NavMenu />
+        <MudButton @onclick="OpenPostDialog">Post</MudButton>
         <div Class="d-flex flex-1 flex-row">
             <MudButton @onclick="OpenDialog" FullWidth="true" Class="d-flex justify-start flex-row align-self-end flex-1 py-4 px-4">
                 <MudAvatar Size="Size.Medium">
@@ -62,9 +65,13 @@
     protected override async Task OnInitializedAsync()
     {
         var token = await GetUserGuidFromTokenAsync();
-        var userGuid = ExtractGuidFromToken(token);
+        var userGuid = ExtractGuidFromToken(token.Replace("\"",""));
+
+        await LocalStorage.SetItemAsync("userGuid", userGuid);
 
         userProfile = await GetProfileAsync(userGuid);
+
+        await LocalStorage.SetItemAsync("username", userProfile.Username);
     }
 
     private void OpenDialog()
@@ -73,10 +80,18 @@
         DialogService.Show<Dialogs.SignOutDialog>("Do you wish to sign out?", options);
     }
 
+    private void OpenPostDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters();
+        parameters.Add("userGuid", userProfile.UserId);
+        DialogService.Show<Dialogs.PostDialog>("", parameters, options);
+    }
+
 
     private async Task<string> GetUserGuidFromTokenAsync()
     {
-        return await JSRuntime.InvokeAsync<string>("localStorage.getItem", "jwtToken");
+        return await LocalStorage.GetItemAsync<string>("token");
     }
 
 

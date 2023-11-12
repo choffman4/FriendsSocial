@@ -71,9 +71,22 @@ message GetProfileByUsernameRequest {
 	string Username = 1;
 }
 
+message GetProfileSearchRequest {
+	string SearchString = 1;
+}
+
+message GetProfileSearchResponse {
+	string Username = 1;
+	string Userid = 2;
+	string FirstName = 3;
+	string LastName = 4;
+}
+
 service MongoProfileService {
 	rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
 	rpc GetProfileByGuid (GetProfileByGuidRequest) returns (GetProfileByGuidResponse);
 	rpc GetProfileByUsername (GetProfileByUsernameRequest) returns (GetProfileByUsernameResponse);
 	rpc CheckUsernameAvailability(UsernameAvailabilityRequest) returns (UsernameAvailabilityResponse);
+
+	rpc GetProfileSearch (GetProfileSearchRequest) returns (stream GetProfileSearchResponse);
 }

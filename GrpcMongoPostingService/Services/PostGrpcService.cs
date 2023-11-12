@@ -55,6 +55,11 @@ namespace GrpcMongoPostingService.Services
                 var postCollection = database.GetCollection<Post>("posts");
                 var commentCollection = database.GetCollection<Comment>("comments");
 
+                //var profileDatabase = mongoClient.GetDatabase("profileDatabase");
+                //var profileCollection = profileDatabase.GetCollection<Profile>("profiles");
+
+                //var username = await profileCollection.Find(p => p.UserId == request.Userid).Project(p => p.Username).FirstOrDefaultAsync();
+
                 // Find the post by its PostId
                 var postFilter = Builders<Post>.Filter.Eq(p => p.PostId, request.Postid);
                 var post = await postCollection.Find(postFilter).FirstOrDefaultAsync();
@@ -70,6 +75,7 @@ namespace GrpcMongoPostingService.Services
                         Date = post.PostedDate.ToString(), // Convert the date to string
                         ChildCommentIds = { }, // Initialize the repeated field
                         Likes = { }
+                        //Username = username
                     };
 
                     // Loop through post.ChildCommentIds and add each comment ID to the list of child comment IDs in the response
@@ -112,6 +118,7 @@ namespace GrpcMongoPostingService.Services
                 // Connect to your MongoDB database
                 var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
                 var database = mongoClient.GetDatabase("profileDatabase"); // Use the appropriate database name
+                var profilecollection = database.GetCollection<Profile>("profiles");
                 var databasePosts = mongoClient.GetDatabase("profilePosts");
                 var postCollection = databasePosts.GetCollection<Post>("posts");
                 var commentCollection = databasePosts.GetCollection<Comment>("comments");
@@ -120,6 +127,8 @@ namespace GrpcMongoPostingService.Services
                 var postFilter = Builders<Post>.Filter.Eq(p => p.UserId, request.Userid);
                 var postCursor = await postCollection.Find(postFilter).ToCursorAsync();
 
+                var username = await profilecollection.Find(p => p.UserId == request.Userid).Project(p => p.Username).FirstOrDefaultAsync();
+
                 // Iterate through the posts and stream each one
                 foreach (var post in postCursor.ToEnumerable())
                 {
@@ -127,11 +136,15 @@ namespace GrpcMongoPostingService.Services
                     var response = new GetAllPostsByUserIdResponse
                     {
                         Userid = post.UserId,
+                        Username = username,
+                        Postid = post.PostId,
                         Title = post.Title,
                         Content = post.Content,
                         Date = post.PostedDate.ToString(), // Convert the date to string
                         ChildCommentIds = { }, // Initialize the repeated field
-                        Likes = { }
+                        Likes = { },
+                        FirstName = await profilecollection.Find(p => p.UserId == post.UserId).Project(p => p.FirstName).FirstOrDefaultAsync(),
+                        LastName = await profilecollection.Find(p => p.UserId == post.UserId).Project(p => p.LastName).FirstOrDefaultAsync()
                     };
 
                     // Loop through post.ChildCommentIds and add each comment ID to the list of child comment IDs in the response
@@ -581,12 +594,17 @@ namespace GrpcMongoPostingService.Services
                 var friendshipsCollection = profileFriendsDatabase.GetCollection<Friendship>("friendships");
                 var postCollection = postsDatabase.GetCollection<Post>("posts");
 
+                var profileDatabase = mongoClient.GetDatabase("profileDatabase");
+                var profileCollection = profileDatabase.GetCollection<Profile>("profiles");
+
                 _logger.LogInformation("UserId: {UserId}", request.UserId);
 
                 var friendFilter = Builders<Friendship>.Filter.Or(
                     Builders<Friendship>.Filter.Eq(f => f.friend1Id, request.UserId),
                     Builders<Friendship>.Filter.Eq(f => f.friend2Id, request.UserId)
                 );
+
+                var username = await profileCollection.Find(p => p.UserId == request.UserId).Project(p => p.Username).FirstOrDefaultAsync();
 
                 var friendships = await friendshipsCollection.Find(friendFilter).ToListAsync();
                 var friendIds = friendships.Select(f => f.friend1Id == request.UserId ? f.friend2Id : f.friend1Id).ToList();
@@ -615,11 +633,14 @@ namespace GrpcMongoPostingService.Services
                     {
                         PostId = post.PostId.ToString(),
                         UserId = post.UserId,
+                        Username = await profileCollection.Find(p => p.UserId == post.UserId).Project(p => p.Username).FirstOrDefaultAsync(),
                         Title = post.Title,
                         Content = post.Content,
                         Date = post.PostedDate.ToString("o", CultureInfo.InvariantCulture),
                         ChildCommentIds = { post.ChildCommentIds },
-                        Likes = { post.UserIdLikes.Select(id => id.ToString()) }
+                        Likes = { post.UserIdLikes.Select(id => id.ToString()) },
+                        FirstName = await profileCollection.Find(p => p.UserId == post.UserId).Project(p => p.FirstName).FirstOrDefaultAsync(),
+                        LastName = await profileCollection.Find(p => p.UserId == post.UserId).Project(p => p.LastName).FirstOrDefaultAsync()
                     };
 
                     response.Posts.Add(postResponse);

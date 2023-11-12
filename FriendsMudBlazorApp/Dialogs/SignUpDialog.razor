@@ -5,6 +5,8 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILocalStorageService LocalStorage
 
 
 <MudDialog>
@@ -119,6 +121,9 @@
         {
             var jsonResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
             var extractedToken = jsonResponse["token"];
+
+            await LocalStorage.SetItemAsync("token", extractedToken);
+            await AuthStateProvider.GetAuthenticationStateAsync();
 
 
             // Navigate to dashboard or any other page after successful login

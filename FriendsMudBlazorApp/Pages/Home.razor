@@ -1,24 +1,19 @@
 ﻿@page "/home"
 @attribute [Authorize]
 @layout AuthLayout
+@inject IDialogService DialogService
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
 
 @using System.IdentityModel.Tokens.Jwt
 @using System.Text.Json
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 
-<MudDrawer Open="true" Anchor="Anchor.Right" Elevation="0" Variant="@DrawerVariant.Persistent"
-           Color="@Color.Primary" Width="300px">
-    <MudDrawerHeader>
-        <MudButton Size="Size.Large" Variant="Variant.Text">friends</MudButton>
-    </MudDrawerHeader>
-</MudDrawer>
-
-<MudAppBar Color="Color.Primary">
-    <!-- AppBar content here -->
-</MudAppBar>
+<RightDrawer />
+<SearchBar />
 
 <MudContainer Style="padding-top: 64px; padding-right: 200px">
     <MudTable Items="_posts" Breakpoint="Breakpoint.Sm" Virtualize="true" FixedHeader="true">
@@ -27,12 +22,17 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <div style="height: 300px; overflow-y: auto;">
-                    <MudText>@context.Username</MudText>
-                    <MudText>@context.Content</MudText>
-                    <MudText>@context.Date</MudText>
-                    <MudButton>Like</MudButton>
-                    <MudButton>Comment</MudButton>
+                <div class="d-flex flex-column" style="height: 300px; overflow-y: auto;" onclick="@(() => OpenPostPage(@context.PostId))">
+                    <div>
+                        <MudButton OnClick="@(() => NavigateToProfile(@context.Username))">@context.FirstName @context.LastName - @context.Username - @context.Date</MudButton>
+                    </div>
+                    <div style="margin-top: 15px">
+                        <MudText>@context.Content</MudText>
+                    </div>
+                    <div class="d-flex align-end flex-grow-1">
+                        <MudButton>Like</MudButton>
+                        <MudButton OnClick="@(() => OpenCommentDialog(@context.PostId))">Comment</MudButton>
+                    </div>
                 </div>
             </MudTd>
         </RowTemplate>
@@ -48,9 +48,30 @@
     private bool isLoading = false;
     private bool hasMorePosts = true;
 
+    private async void OpenCommentDialog(string postId)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters();
+        //pass the current users id, the post id in parameters
+        parameters.Add("userGuid", await LocalStorage.GetItemAsync<string>("userGuid"));
+        parameters.Add("postId", postId);
+        DialogService.Show<Dialogs.CommentDialog>("", parameters, options);
+    }
+
+    private void OpenPostPage(string postId)
+    {
+        NavigationManager.NavigateTo($"/post/{postId}");
+    }
+
+
     protected override async Task OnInitializedAsync()
     {
         await LoadMorePosts();
+    }
+
+    private void NavigateToProfile(string profileUsername)
+    {
+        NavigationManager.NavigateTo($"/profile/{profileUsername}");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -71,7 +92,7 @@
 
         try
         {
-            var userId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userGuid");
+            var userId = await LocalStorage.GetItemAsync<string>("userGuid");
             var requestUri = "http://localhost:8006/post/GetPosts";
 
             var request = new HttpRequestMessage
@@ -117,8 +138,27 @@
     public class Post
     {
         public string Username { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string PostId { get; set; }
         public string Content { get; set; }
-        public string Date { get; set; }
+        private string _date;
+
+        public string Date
+        {
+            get => _date;
+            set
+            {
+                // Parse the ISO 8601 string and convert it to the desired format.
+                if (DateTime.TryParse(value, out DateTime parsedDate))
+                {
+                    _date = parsedDate.ToString("MM/dd/yyyy HH:mm:ss");
+                } else
+                {
+                    _date = "Invalid date"; // You can decide how to handle invalid date strings.
+                }
+            }
+        }
     }
 
     public class GetPostsResponse

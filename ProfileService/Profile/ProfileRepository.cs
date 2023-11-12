@@ -43,5 +43,15 @@ namespace ProfileService.Profile
         {
             return await _grpcClient.GetProfileByUsernameAsync(request);
         }
+
+        public async IAsyncEnumerable<GetProfileSearchResponse> GetProfileSearchAsync(GetProfileSearchRequest request)
+        {
+            var responseStream = _grpcClient.GetProfileSearch(request);
+
+            await foreach (var response in responseStream.ResponseStream.ReadAllAsync())
+            {
+                yield return response;
+            }
+        }
     }
 }

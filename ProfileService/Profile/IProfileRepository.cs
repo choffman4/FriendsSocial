@@ -8,5 +8,6 @@ namespace ProfileService.Profile
         Task<GetProfileByGuidResponse> GetProfileByGuidAsync(GetProfileByGuidRequest request);
         Task<GetProfileByUsernameResponse> GetProfileByUsernameAsync(GetProfileByUsernameRequest request);
         Task<UsernameAvailabilityResponse> CheckUsernameAvailabilityAsync(UsernameAvailabilityRequest request);
+        IAsyncEnumerable<GetProfileSearchResponse> GetProfileSearchAsync(GetProfileSearchRequest request);
     }
 }

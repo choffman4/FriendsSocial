@@ -1,0 +1,289 @@
+﻿@page "/profile/{UserId}"
+@layout AuthLayout
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+
+@using System.Text
+@using System.Text.Json
+
+
+<RightDrawer />
+<SearchBar />
+
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    @if (dataLoaded)
+    {
+        <!-- User Profile Section -->
+
+        <MudGrid>
+            <MudItem xs="2">
+                <MudAvatar Size="Size.Large"></MudAvatar>
+            </MudItem>
+            <MudItem xs="10">
+                <MudText Typo="Typo.h5">@userProfile.FirstName @userProfile.LastName</MudText>
+                <MudText Typo="Typo.h6">@userProfile.Username</MudText>
+                @if (isCurrentUser == false && isFriend == false)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddFriend">Add Friend</MudButton>
+                } else if (isFriend == true && isCurrentUser == false)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => RemoveFriend(currentUserId, userProfile.UserId))">Remove Friend</MudButton>
+                }
+
+            </MudItem>
+
+        </MudGrid>
+
+
+        <!-- Posts Section -->
+        <MudList>
+            <MudDivider />
+            @foreach (var post in _posts)
+            {
+                <MudListItem Button OnClick="@(() => NavigateToPost(post.PostId))">
+                    <div class="d-flex flex-column" style="height: 300px; overflow-y: auto;">
+                        <div>
+                            <MudButton>@post.FirstName @post.LastName - @post.Username - @post.Date</MudButton>
+                        </div>
+                        <div style="margin-top: 15px">
+                            <MudText>@post.Content</MudText>
+                        </div>
+                        <div class="d-flex align-end flex-grow-1">
+                            <MudButton>Like</MudButton>
+                            <MudButton OnClick="@(() => ShowCommentDialog(post.PostId))">Comment</MudButton>
+                        </div>
+                    </div>
+                </MudListItem>
+                <MudDivider />
+            }
+        </MudList>
+    } else
+    {
+        <MudText>Loading profile and posts...</MudText>
+    }
+</MudContainer>
+
+
+@code {
+    public class Post
+    {
+        public string Username { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+        public string PostId { get; set; }
+        public string Content { get; set; }
+
+        private string _date;
+
+        public string Date
+        {
+            get => _date;
+            set
+            {
+                // Parse the ISO 8601 string and convert it to the desired format.
+                if (DateTime.TryParse(value, out DateTime parsedDate))
+                {
+                    _date = parsedDate.ToString("MM/dd/yyyy HH:mm:ss");
+                } else
+                {
+                    _date = "Invalid date"; // You can decide how to handle invalid date strings.
+                }
+            }
+        }
+    }
+
+    private async Task AddFriend()
+    {
+        try
+        {
+            var senderId = await LocalStorage.GetItemAsync<string>("userGuid");
+            var receiverId = userProfile.UserId;
+
+            var friendRequest = new
+            {
+                sender = senderId,
+                receiver = receiverId
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(friendRequest), Encoding.UTF8, "application/json");
+
+            var response = await Http.PostAsync("http://localhost:8007/friend/SendFriendRequest", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Handle the success scenario (maybe a notification or UI update)
+            } else
+            {
+                // Handle the failure scenario
+                var error = await response.Content.ReadAsStringAsync();
+                // Log the error or notify the user
+            }
+        } catch (Exception ex)
+        {
+            // Log the exception or notify the user
+        }
+    }
+
+
+    [Parameter]
+    public string UserId { get; set; }
+
+    public string currentUserId;
+
+    private UserProfile userProfile;
+    private List<Post> _posts = new List<Post>();
+    private bool dataLoaded = false;
+
+    private bool isCurrentUser;
+    private string currentUsername;
+    private bool isFriend;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _posts.Clear();
+        await LoadUserProfile();
+        await LoadUserPosts();
+        await LoadFriends();
+        dataLoaded = true;
+
+        currentUserId = await LocalStorage.GetItemAsync<string>("userGuid");
+
+        currentUsername = await LocalStorage.GetItemAsync<string>("username");
+        if (UserId != currentUsername)
+        {
+            isCurrentUser = false;
+        } else
+        {
+            isCurrentUser = true;
+        }
+    }
+
+    private async Task LoadUserProfile()
+    {
+        // The endpoint might need to be adjusted if it requires more than just the UserId
+        var response = await Http.GetFromJsonAsync<UserProfile>($"http://localhost:8002/profile/username/{UserId}");
+        if (response != null)
+        {
+            userProfile = response;
+        } else
+        {
+            // Handle the error or notify the user
+        }
+    }
+
+    private async Task LoadUserPosts()
+    {
+        HttpRequestMessage request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"http://localhost:8006/post/GetAllPostsByUserId"),
+                Content = new StringContent(JsonSerializer.Serialize(new { userid = userProfile.UserId }), Encoding.UTF8, "application/json")
+            };
+
+        var response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            var posts = await response.Content.ReadFromJsonAsync<List<Post>>();
+            if (posts != null)
+            {
+                _posts.AddRange(posts);
+            }
+        } else
+        {
+            // Handle the error or notify the user
+        }
+    }
+
+    private async Task LoadFriends()
+    {
+        var userId = await LocalStorage.GetItemAsync<string>("userGuid");
+        var requestUri = "http://localhost:8007/friend/GetFriends";
+
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri)
+            {
+                Content = JsonContent.Create(new { UserId = userId })
+            };
+
+        var response = await Http.SendAsync(requestMessage);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var friendIds = await response.Content.ReadFromJsonAsync<List<FriendIdResponse>>();
+
+            foreach (var friendId in friendIds)
+            {
+                if (friendId.FriendUsername == this.UserId)
+                {
+                    isFriend = true;
+                    break;
+                }
+            }
+
+            // Now you have a list of friendProfiles with the required information.
+            // You can proceed to use this list to display the profiles in the UI.
+        } else
+        {
+            // Handle error
+        }
+    }
+
+    public class FriendIdResponse
+    {
+        public string FriendUsername { get; set; }
+    }
+
+
+    public class UserProfile
+    {
+        public string Username { get; set; }
+        public string UserId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string error { get; set; }
+    }
+
+    private void NavigateToPost(string postId)
+    {
+        NavigationManager.NavigateTo($"/post/{postId}");
+    }
+
+    private void ShowCommentDialog(string postId)
+    {
+        // Logic to show comment dialog
+    }
+
+    private string GenerateFriendshipId(string senderId, string receiverId)
+    {
+        // Remove the dashes first before concatenating.
+        var sender = senderId.Replace("-", "");
+        var receiver = receiverId.Replace("-", "");
+
+        // Concatenate and then order the entire string.
+        var combined = sender + receiver;
+        var ordered = string.Concat(combined.OrderBy(c => c));
+
+        return ordered;
+    }
+
+    private async Task RemoveFriend(string selfId, string friendId)
+    {
+
+        string url = "http://localhost:8007/friend/RemoveFriend";
+
+        var removeFriendModel = new
+        {
+            friendshipId = GenerateFriendshipId(selfId, friendId)
+        };
+
+        var response = await Http.PostAsJsonAsync(url, removeFriendModel);
+        if (response.IsSuccessStatusCode)
+        {
+            
+        } else
+        {
+            // Handle error
+        }
+    }
+}

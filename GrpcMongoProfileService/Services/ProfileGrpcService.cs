@@ -2,6 +2,7 @@
 using GrpcMongoProfileService.User;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace GrpcMongoProfileService.Services
@@ -57,8 +58,7 @@ namespace GrpcMongoProfileService.Services
                 await collection.ReplaceOneAsync(filter, existingProfile);
 
                 return new UpdateProfileResponse { Message = "Profile updated successfully." };
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during profile update");
                 return new UpdateProfileResponse { Message = "An error occurred while updating the profile." };
@@ -145,8 +145,7 @@ namespace GrpcMongoProfileService.Services
                 // Create a response indicating whether the username is available or not
                 var response = new UsernameAvailabilityResponse { Available = existingProfile == null };
                 return response;
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while checking username availability");
                 return new UsernameAvailabilityResponse { Available = false }; // Return false on error
@@ -202,5 +201,45 @@ namespace GrpcMongoProfileService.Services
                 return new GetProfileByUsernameResponse();
             }
         }
+
+        public override async Task GetProfileSearch(GetProfileSearchRequest request, IServerStreamWriter<GetProfileSearchResponse> responseStream, ServerCallContext context)
+        {
+            var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
+            var database = mongoClient.GetDatabase("profileDatabase");
+            var collection = database.GetCollection<UserProfile>("profiles");
+
+            // Assuming the search term is in a property named SearchTerm of the request object
+            string searchTerm = request.SearchString?.Trim();
+
+            // Build the filter for MongoDB query
+            var filterBuilder = Builders<UserProfile>.Filter;
+            var filter = filterBuilder.Regex("Username", new BsonRegularExpression(searchTerm, "i")) |
+                         filterBuilder.Regex("FirstName", new BsonRegularExpression(searchTerm, "i")) |
+                         filterBuilder.Regex("LastName", new BsonRegularExpression(searchTerm, "i")) |
+                         filterBuilder.Regex("FullName", new BsonRegularExpression(searchTerm, "i"));
+
+            using (var cursor = await collection.FindAsync(filter))
+            {
+                while (await cursor.MoveNextAsync())
+                {
+                    foreach (var profile in cursor.Current)
+                    {
+                        // Create a response from the profile information
+                        var response = new GetProfileSearchResponse
+                        {
+                            // Map the UserProfile fields to the response
+                            Username = profile.Username,
+                            FirstName = profile.FirstName,
+                            LastName = profile.LastName,
+                            // ... other fields you want to include
+                        };
+
+                        // Use the response stream to send the response back to the client
+                        await responseStream.WriteAsync(response);
+                    }
+                }
+            }
+        }
+
     }
 }

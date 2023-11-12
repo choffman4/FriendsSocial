@@ -1,0 +1,71 @@
+﻿@inject AuthenticationStateProvider AuthStateProvider
+@inject ILocalStorageService LocalStorage
+@inject HttpClient Http
+
+@using System.IdentityModel.Tokens.Jwt
+
+<MudDialog ContentStyle="width: 600px" Style="margin-top: -35vh">
+    <DialogContent>
+            <MudGrid>
+                <MudItem xs="1">
+                    <MudAvatar Size="Size.Medium" style="margin-top: 17px;">
+                        <MudImage Src="images/toiletvisit.jpg"></MudImage>
+                    </MudAvatar>
+                </MudItem>
+                <MudItem xs="11">
+                <MudTextField T="string" Placeholder="What is happening?!" Variant="Variant.Text" @bind-Value="pModel.content" 
+                    For="@(() => pModel.content)" Lines="@LineCount" DisableUnderLine="true" />
+                </MudItem>
+            </MudGrid>
+        <MudDivider />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Post">Post</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string UserGuid { get; set; }
+    private PostModel pModel;
+
+
+    private class PostModel
+    {
+        public string content { get; set; }
+        public string title { get; set; } = "title";
+        public string userid { get; set; }
+        public string privacyType { get; set; } = "friends";
+    }
+
+    protected override void OnInitialized()
+    {
+        pModel = new PostModel
+            {
+                userid = UserGuid
+            };
+    }
+
+    private int LineCount { get; set; } = 5;
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task Post()
+    {
+
+        string url = "http://localhost:8006/post/CreatePost";
+
+        var response = await Http.PostAsJsonAsync(url, pModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        } else
+        {
+            // Handle the error case
+        }
+    }
+}

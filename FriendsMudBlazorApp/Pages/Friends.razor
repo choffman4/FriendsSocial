@@ -1,0 +1,97 @@
+﻿@page "/friends"
+@layout AuthLayout
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
+
+<RightDrawer />
+<SearchBar />
+
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    @if (friendProfiles != null && friendProfiles.Any())
+    {
+        foreach (var friend in friendProfiles)
+        {
+            <MudCard Style="margin-bottom: 20px;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">@friend.FirstName @friend.LastName</MudText>
+                    <MudText Typo="Typo.subtitle1">@friend.Username</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Color="Color.Primary" OnClick="@(() => GoToProfile(friend.Username))">View Profile</MudButton>
+                </MudCardActions>
+            </MudCard>
+            <MudDivider />
+        }
+    } else
+    {
+        <MudText Typo="Typo.h6">No friends found.</MudText>
+    }
+</MudContainer>
+
+@code {
+    List<UserProfile> friendProfiles = new List<UserProfile>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFriends();
+    }
+
+    private async Task LoadFriends()
+    {
+        var userId = await LocalStorage.GetItemAsync<string>("userGuid");
+        var requestUri = "http://localhost:8007/friend/GetFriends";
+
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri)
+            {
+                Content = JsonContent.Create(new { UserId = userId })
+            };
+
+        var response = await Http.SendAsync(requestMessage);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var friendIds = await response.Content.ReadFromJsonAsync<List<FriendIdResponse>>();
+
+            foreach (var friendId in friendIds)
+            {
+                var profileResponse = await Http.GetFromJsonAsync<UserProfile>($"http://localhost:8002/profile/userid/{friendId.FriendId}");
+                if (profileResponse != null)
+                {
+                    friendProfiles.Add(new UserProfile
+                        {
+                            Username = profileResponse.Username,
+                            FirstName = profileResponse.FirstName,
+                            LastName = profileResponse.LastName,
+                            UserId = profileResponse.UserId
+                        });
+                }
+            }
+
+            // Now you have a list of friendProfiles with the required information.
+            // You can proceed to use this list to display the profiles in the UI.
+        } else
+        {
+            // Handle error
+        }
+    }
+
+
+    public class FriendIdResponse
+    {
+        public string FriendId { get; set; }
+    }
+
+    public class UserProfile
+    {
+        public string Username { get; set; }
+        public string UserId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+
+    private void GoToProfile(string username)
+    {
+        Navigation.NavigateTo($"/profile/{username}");
+    }
+}

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using ProfileService.Profile;
 using System.Threading.Tasks;
 
+
+
 [Route("profile")]
 [ApiController]
 public class ProfileController : ControllerBase
@@ -44,4 +46,21 @@ public class ProfileController : ControllerBase
         var response = await _profileRepository.GetProfileByUsernameAsync(request);
         return Ok(response);
     }
+
+    [HttpGet("search/{searchTerm}")]
+    public async Task<IActionResult> SearchProfilesAsync(string searchTerm)
+    {
+        var request = new GetProfileSearchRequest { SearchString = searchTerm };
+        var responses = new List<GetProfileSearchResponse>();
+
+        await foreach (var response in _profileRepository.GetProfileSearchAsync(request))
+        {
+            responses.Add(response);
+        }
+
+        return Ok(responses);
+    }
+
+
+
 }

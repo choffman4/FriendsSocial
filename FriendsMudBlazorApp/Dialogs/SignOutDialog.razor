@@ -1,7 +1,7 @@
 ﻿@inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JSRuntime
-
+@inject ILocalStorageService LocalStorage
 
 
 <MudDialog>
@@ -17,6 +17,9 @@
 
     async void Submit()
     {
+        await LocalStorage.ClearAsync();
+        await AuthStateProvider.GetAuthenticationStateAsync();
+
 
         NavigationManager.NavigateTo("/"); // Redirect to login or any other page
         MudDialog.Close(DialogResult.Ok(true));

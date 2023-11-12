@@ -1,7 +1,21 @@
-﻿<MudNavMenu>
-    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Announcement">Notifications</MudNavLink>
-    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Forum">Messages</MudNavLink>
-    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Person">Profile</MudNavLink>
-    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings">Account Settings</MudNavLink>
+﻿@inject ILocalStorageService LocalStorage
+
+<MudNavMenu>
+    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" Href="/home">Home</MudNavLink>
+    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Announcement" Href="/notifications">Notifications</MudNavLink>
+    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Forum" Href="/messages">Messages</MudNavLink>
+    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.People" Href="/friends">Friends</MudNavLink>
+    <!-- Use the userProfileLink for the href attribute -->
+    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Person" Href="@userProfileLink">Profile</MudNavLink>
+    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/account-settings">Account Settings</MudNavLink>
 </MudNavMenu>
+
+@code {
+    private string userProfileLink = ""; // This will hold the link to the user's profile
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await LocalStorage.GetItemAsync<string>("username");
+        userProfileLink = $"/profile/{userId}"; // Construct the link with the userId
+    }
+}

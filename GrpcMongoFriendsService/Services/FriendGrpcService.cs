@@ -146,6 +146,8 @@ namespace GrpcMongoFriendsService.Services
                 // Connect to your MongoDB database and collection for friend requests
                 var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
                 var database = mongoClient.GetDatabase("profileFriends");
+                var profileDatabase = mongoClient.GetDatabase("profileDatabase");
+                var profileCollection = profileDatabase.GetCollection<Profile>("profiles");
                 var friendRequestsCollection = database.GetCollection<FriendRequest>("friendRequests");
 
                 // Find friend requests received by the user
@@ -160,7 +162,9 @@ namespace GrpcMongoFriendsService.Services
                         FriendRequests = new FriendRequestMessage
                         {
                             Sender = friendRequest.senderId,
-                            Receiver = friendRequest.receiverId
+                            Receiver = friendRequest.receiverId,
+                            SendersFirstname = await profileCollection.Find(p => p.UserId == friendRequest.senderId).Project(p => p.FirstName).FirstOrDefaultAsync(),
+                            SendersLastname = await profileCollection.Find(p => p.UserId == friendRequest.senderId).Project(p => p.LastName).FirstOrDefaultAsync()
                         }
                     };
 
@@ -183,6 +187,8 @@ namespace GrpcMongoFriendsService.Services
                 var mongoClient = new MongoClient(_configuration.GetConnectionString("MongoDb"));
                 var database = mongoClient.GetDatabase("profileFriends");
                 var friendshipsCollection = database.GetCollection<Friendship>("friendships");
+                var profileDatabase = mongoClient.GetDatabase("profileDatabase");
+                var profileCollection = profileDatabase.GetCollection<Profile>("profiles");
 
                 // Find friendships for the user
                 var filter = Builders<Friendship>.Filter.Eq(f => f.friend1Id, request.UserId) | Builders<Friendship>.Filter.Eq(f => f.friend2Id, request.UserId);
@@ -196,7 +202,8 @@ namespace GrpcMongoFriendsService.Services
                     // Create a GetFriendsResponse message for each friend
                     var response = new GetFriendsResponse
                     {
-                        FriendId = friendId
+                        FriendId = friendId,
+                        FriendUsername = await profileCollection.Find(p => p.UserId == friendId).Project(p => p.Username).FirstOrDefaultAsync()
                     };
 
                     // Stream the response

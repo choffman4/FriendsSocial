@@ -1,0 +1,75 @@
+﻿@page "/search/{searchTerm}"
+@layout AuthLayout
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<RightDrawer />
+<SearchBar />
+
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    @if (users != null && users.Any())
+    {
+        foreach (var user in users)
+        {
+            <MudCard Style="margin-bottom: 20px;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">@user.FirstName @user.LastName</MudText>
+                    <MudText Typo="Typo.subtitle1">@user.Username</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Color="Color.Primary" OnClick="@(() => GoToProfile(user.Username))">View Profile</MudButton>
+                </MudCardActions>
+            </MudCard>
+            <MudDivider />
+        }
+    } else
+    {
+        <MudText Typo="Typo.h6">No users found.</MudText>
+    }
+    </MudContainer>
+
+    @code {
+    [Parameter]
+    public string SearchTerm { get; set; }
+
+    private List<UserProfile> users;
+
+    // This method runs when the component is first initialized and when the SearchTerm parameter changes.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            await LoadUsers(SearchTerm);
+        }
+    }
+
+    private async Task LoadUsers(string searchTerm)
+    {
+        // Assuming you have a base URL configured for your HttpClient
+        var response = await Http.GetFromJsonAsync<List<UserProfile>>($"http://localhost:8002/profile/search/{searchTerm}");
+
+        if (response != null)
+        {
+            users = response;
+        } else
+        {
+            users = new List<UserProfile>();
+        }
+
+        // Request the UI to be re-rendered
+        StateHasChanged();
+    }
+
+    public class UserProfile
+    {
+        public string Username { get; set; }
+        public string UserId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+
+    private void GoToProfile(string userId)
+    {
+        Navigation.NavigateTo($"/profile/{userId}");
+    }
+}

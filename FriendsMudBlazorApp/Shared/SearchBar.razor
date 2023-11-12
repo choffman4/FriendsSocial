@@ -1,0 +1,39 @@
+﻿<MudAppBar Color="Color.Primary">
+    <MudTextField @bind-Value="searchQuery"
+                  PlaceHolder="Search"
+                  Variant="Variant.Outlined"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  AdornmentColor="Color.Secondary"
+                  OnKeyPress="HandleKeyPress"
+                  OnAdornmentClick="ExecuteSearch"
+    @oninput="UpdateSearchQuery" />
+</MudAppBar>
+
+@code {
+    private string searchQuery;
+
+    private void UpdateSearchQuery(ChangeEventArgs e)
+    {
+        searchQuery = e.Value.ToString();
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            ExecuteSearch();
+        }
+    }
+
+    private void ExecuteSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            NavigationManager.NavigateTo($"/search/{Uri.EscapeDataString(searchQuery)}");
+        }
+    }
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+}

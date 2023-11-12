@@ -1,0 +1,115 @@
+﻿@page "/notifications"
+
+@layout AuthLayout
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
+@inject HttpClient Http
+
+@using System.IdentityModel.Tokens.Jwt
+@using System.Text.Json;
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+
+<RightDrawer />
+<SearchBar />
+
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    @if (friendRequests != null)
+    {
+        foreach (var request in friendRequests)
+        {
+            <div>
+                Friend request from @request.friendRequests.sendersFirstname @request.friendRequests.sendersLastname
+                <MudButton OnClick="@(() => AcceptFriendRequest(request.friendRequests.sender, request.friendRequests.receiver))">Accept</MudButton>
+                <MudButton OnClick="@(() => DeclineFriendRequest(request.friendRequests.sender, request.friendRequests.receiver))">Decline</MudButton>
+            </div>
+        }
+    } else
+    {
+        <MudText>No notifications</MudText>
+    }
+</MudContainer>
+
+@code {
+    private List<FriendRequest> friendRequests;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await LocalStorage.GetItemAsync<string>("userGuid");
+        await GetFriendRequests(userId);
+    }
+
+    private async Task GetFriendRequests(string userId)
+    {
+        var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri("http://localhost:8007/friend/GetFriendRequestsReceived"),
+                Content = new StringContent(JsonSerializer.Serialize(new { userid = userId }), Encoding.UTF8, "application/json")
+            };
+
+        var response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            friendRequests = await response.Content.ReadFromJsonAsync<List<FriendRequest>>();
+        } else
+        {
+            // Handle error
+        }
+    }
+
+
+    private async Task AcceptFriendRequest(string senderId, string receiverId)
+    {
+
+        string url = "http://localhost:8007/friend/AcceptFriendRequest";
+
+        var loginModel = new
+        {
+            friendshipId = GenerateFriendshipId(senderId, receiverId)
+        };
+
+        var response = await Http.PostAsJsonAsync(url, loginModel);
+        if (response.IsSuccessStatusCode)
+        {
+            var userId = await LocalStorage.GetItemAsync<string>("userGuid");
+            await GetFriendRequests(userId);
+        } else
+        {
+            // Handle error
+        }
+    }
+
+    private void DeclineFriendRequest(string senderId, string receiverId)
+    {
+        // Logic to decline the friend request
+    }
+
+    private string GenerateFriendshipId(string senderId, string receiverId)
+    {
+        // Remove the dashes first before concatenating.
+        var sender = senderId.Replace("-", "");
+        var receiver = receiverId.Replace("-", "");
+
+        // Concatenate and then order the entire string.
+        var combined = sender + receiver;
+        var ordered = string.Concat(combined.OrderBy(c => c));
+
+        return ordered;
+    }
+
+
+    public class FriendRequest
+    {
+        public FriendRequestDetail friendRequests { get; set; }
+    }
+
+    public class FriendRequestDetail
+    {
+        public string sender { get; set; }
+        public string receiver { get; set; }
+        public string sendersFirstname { get; set; }
+        public string sendersLastname { get; set; }
+    }
+}

@@ -63,6 +63,8 @@ message GetFriendRequestsReceivedResponse {
 message FriendRequestMessage {
 	string sender = 1;
 	string receiver = 2;
+	string sendersFirstname = 3;
+	string sendersLastname = 4;
 }
 
 message GetFriendsRequest {
@@ -71,6 +73,7 @@ message GetFriendsRequest {
 
 message GetFriendsResponse {
 	string friendId = 1;
+	string friendUsername = 2;
 }
 
 message RemoveFriendRequest {

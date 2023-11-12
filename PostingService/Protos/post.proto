@@ -39,6 +39,9 @@ message PostObject {
     string date = 5;
     repeated string childCommentIds = 6;
     repeated string likes = 7;
+    string username = 8;
+    string firstName = 9;
+    string lastName = 10;
 }
 
 // Response message for the paginated posts
@@ -85,6 +88,7 @@ message GetPostByIdResponse {
     repeated string childCommentIds = 5;
     repeated string likes = 6;
     string message = 7;
+    string username = 8;
 }
 
 message GetAllPostsByUserIdRequest {
@@ -100,6 +104,9 @@ message GetAllPostsByUserIdResponse {
     repeated string childCommentIds = 6;
     repeated string likes = 7;
     string message = 8;
+    string username = 9;
+    string firstName = 10;
+    string lastName = 11;
 }
 
 message EditPostRequest {

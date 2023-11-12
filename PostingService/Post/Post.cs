@@ -12,6 +12,7 @@ namespace PostingService.Post
 
         public string PostId { get; set; }
         public string UserId { get; set; }
+        public string Username { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
         public string PrivacyType { get; set; }
@@ -21,7 +22,7 @@ namespace PostingService.Post
         public List<String> UserIdLikes { get; set; }
         public List<String> ChildCommentIds { get; set; }
 
-        public Post(string userid, string title, string content, string privacyType)
+        public Post(string userid, string title, string content, string privacyType, string username)
         {
             UserId = userid;
             Title = title;
@@ -32,6 +33,7 @@ namespace PostingService.Post
             LastEditedDate = DateTime.UtcNow;
             UserIdLikes = new List<String>();
             ChildCommentIds = new List<String>();
+            Username = username;
         }
     }
 }
