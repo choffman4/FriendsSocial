@@ -42,8 +42,23 @@ namespace FriendsMudBlazorApp.Services
             var payload = jwt.Split('.')[1];
             var jsonBytes = ParseBase64WithoutPadding(payload);
             var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
-            return keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString()));
+
+            var claims = new List<Claim>();
+            foreach (var kvp in keyValuePairs)
+            {
+                // Handle specific claim types that require a certain claim type
+                if (kvp.Key.Equals("nameid", StringComparison.OrdinalIgnoreCase))
+                {
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, kvp.Value.ToString()));
+                } else
+                {
+                    claims.Add(new Claim(kvp.Key, kvp.Value.ToString()));
+                }
+            }
+
+            return claims;
         }
+
 
         private static byte[] ParseBase64WithoutPadding(string base64)
         {

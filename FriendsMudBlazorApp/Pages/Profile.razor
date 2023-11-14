@@ -66,6 +66,20 @@
 
 
 @code {
+    
+    [Parameter]
+    public string UserId { get; set; }
+
+    public string currentUserId;
+
+    private UserProfile userProfile;
+    private List<Post> _posts = new List<Post>();
+    private bool dataLoaded = false;
+
+    private bool isCurrentUser;
+    private string currentUsername;
+    private bool isFriend;
+
     public class Post
     {
         public string Username { get; set; }
@@ -127,18 +141,6 @@
     }
 
 
-    [Parameter]
-    public string UserId { get; set; }
-
-    public string currentUserId;
-
-    private UserProfile userProfile;
-    private List<Post> _posts = new List<Post>();
-    private bool dataLoaded = false;
-
-    private bool isCurrentUser;
-    private string currentUsername;
-    private bool isFriend;
 
     protected override async Task OnParametersSetAsync()
     {

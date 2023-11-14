@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using MudBlazor.Services;
+using GrpcMongoMessagingService;
+using FriendsMudBlazorApp.Hubs;
 
 namespace FriendsMudBlazorApp
 {
@@ -25,6 +27,14 @@ namespace FriendsMudBlazorApp
             builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
             builder.Services.AddAuthorizationCore();
             builder.Services.AddBlazoredLocalStorage();
+            builder.Services.AddSignalR();
+
+            builder.Services.AddGrpcClient<MongoMessagingService.MongoMessagingServiceClient>(o =>
+            {
+                o.Address = new Uri("http://localhost:8008"); // Replace with your gRPC server's address
+            });
+
+            builder.Services.AddSingleton<MessagingServiceClientWrapper>();
 
 
             var app = builder.Build();
@@ -44,6 +54,8 @@ namespace FriendsMudBlazorApp
             app.UseRouting();
 
             app.MapBlazorHub();
+            app.MapHub<MessageHub>("/messagehub");
+
             app.MapFallbackToPage("/_Host");
 
             app.Run();

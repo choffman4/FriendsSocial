@@ -1,7 +1,149 @@
-﻿@page "/messages"
+﻿@page "/messages/{FriendGuid}"
+@layout AuthLayout
+@inject Services.MessagingServiceClientWrapper MessagingService
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
 
-<h3>Messages</h3>
+
+@using Microsoft.AspNetCore.SignalR.Client
+
+<RightDrawer />
+<SearchBar />
+
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    <div class="message-list">
+        @foreach (var message in messages)
+        {
+            <div class="@GetMessageStyle(message)">
+                <span>@message.Content</span>
+                <small>@message.Timestamp.ToString("g")</small>
+            </div>
+        }
+    </div>
+    <div class="message-input">
+        <MudTextField @bind-Value="newMessage" FullWidth="true" Placeholder="Type a message..."/>
+        <MudButton Color="Color.Primary" OnClick="SendMessage">Send</MudButton>
+    </div>
+</MudContainer>
 
 @code {
+    [Parameter]
+    public string FriendGuid { get; set; }
+    
+    private string UserGuid;
+    private List<Message> messages = new List<Message>();
+    private string newMessage;
 
+    private string previousFriendGuid;
+
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserGuid = await LocalStorage.GetItemAsync<string>("userGuid");
+        previousFriendGuid = FriendGuid;
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/messagehub"))
+            .Build();
+
+        hubConnection.On<string, Message>("ReceiveMessage", (user, message) =>
+        {
+            messages.Add(message); // Append new message to the list
+
+            // Invoke StateHasChanged on the UI thread to update the UI
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+        });
+
+        await hubConnection.StartAsync();
+        await LoadMessages(); // This will sort the existing messages
+    }
+
+    private async Task LoadMessages()
+    {
+        var grpcMessages = await MessagingService.RetrieveMessagesAsync(UserGuid, FriendGuid);
+
+        messages = grpcMessages.Select(grpcMsg => new Message
+            {
+                SenderId = grpcMsg.SenderId,
+                ReceiverId = grpcMsg.ReceiverId,
+                Content = grpcMsg.Content,
+                Timestamp = DateTime.Parse(grpcMsg.Timestamp),
+                IsRead = grpcMsg.IsRead
+            })
+        .OrderBy(m => m.Timestamp) // Sort messages once when loading
+        .ToList();
+
+        StateHasChanged(); // No need for InvokeAsync here since we are already on the UI thread
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        UserGuid = await LocalStorage.GetItemAsync<string>("userGuid");
+
+        // Check if the FriendGuid has changed before loading messages
+        if (FriendGuid != previousFriendGuid)
+        {
+            previousFriendGuid = FriendGuid;
+
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/messagehub"))
+                .Build();
+
+            hubConnection.On<Message>("ReceiveMessage", (message) =>
+            {
+                messages.Add(message); // Append new message to the list
+
+                // Invoke StateHasChanged on the UI thread to update the UI
+                InvokeAsync(() =>
+                {
+                    StateHasChanged();
+                });
+            });
+
+            await hubConnection.StartAsync();
+
+            await LoadMessages();
+        }
+    }
+
+
+    // Modify SendMessage to use the SignalR hub
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrEmpty(newMessage))
+        {
+            await hubConnection.SendAsync("SendMessage", UserGuid, FriendGuid, newMessage);
+            newMessage = string.Empty;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    public bool IsConnected =>
+        hubConnection?.State == HubConnectionState.Connected;
+
+    private string GetMessageStyle(Message message)
+    {
+        return message.SenderId == UserGuid ? "sent-message" : "received-message";
+    }
+
+    public class Message
+    {
+        public string SenderId { get; set; }
+        public string ReceiverId { get; set; }
+        public string Content { get; set; }
+        public DateTime Timestamp { get; set; }
+        public bool IsRead { get; set; }
+    }
 }

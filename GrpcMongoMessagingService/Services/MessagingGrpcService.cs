@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using System.Reflection;
 using GrpcMongoMessagingService.MessageDocument;
+using MongoDB.Bson;
 
 namespace GrpcMongoMessagingService.Services
 {
@@ -54,25 +55,33 @@ namespace GrpcMongoMessagingService.Services
         {
             try
             {
-                // Query to get all messages exchanged between two users
-                var filter = Builders<MessageObject>.Filter.Or(
-                    Builders<MessageObject>.Filter.And(
-                        Builders<MessageObject>.Filter.Eq(m => m.SenderId, request.UserId1),
-                        Builders<MessageObject>.Filter.Eq(m => m.ReceiverId, request.UserId2)
-                    ),
-                    Builders<MessageObject>.Filter.And(
-                        Builders<MessageObject>.Filter.Eq(m => m.SenderId, request.UserId2),
-                        Builders<MessageObject>.Filter.Eq(m => m.ReceiverId, request.UserId1)
-                    )
+                // Construct the filter for the message query
+                var builder = Builders<MessageObject>.Filter;
+                var filter = builder.Or(
+                    builder.And(builder.Eq(m => m.SenderId, request.UserId1), builder.Eq(m => m.ReceiverId, request.UserId2)),
+                    builder.And(builder.Eq(m => m.SenderId, request.UserId2), builder.Eq(m => m.ReceiverId, request.UserId1))
                 );
 
-
-                var messagesFromDb = await _messages.Find(filter).ToListAsync();
-
-                // Convert MongoDB messages to gRPC message type
-                var messages = messagesFromDb.Select(m => new Message
+                if (!string.IsNullOrEmpty(request.LastMessageId))
                 {
-                    MessageId = m.Id,
+                    var lastTimestamp = DateTime.Parse(request.LastTimestamp); // Assumes timestamp is in a parseable format
+                    var objectId = new ObjectId(request.LastMessageId);
+
+                    // Modify the filter to fetch messages older than the last loaded message
+                    filter &= builder.Lt(m => m.Timestamp, lastTimestamp) & builder.Lt(m => m.Id, objectId.ToString());
+                }
+
+                // Sort the messages in descending order of timestamp and limit the result
+                var messagesFromDb = await _messages.Find(filter)
+                                                    .SortByDescending(m => m.Timestamp)
+                                                    .ThenByDescending(m => m.Id)
+                                                    .Limit(request.PageSize)
+                                                    .ToListAsync();
+
+                // Convert MongoDB messages to gRPC messages
+                var grpcMessages = messagesFromDb.Select(m => new Message
+                {
+                    MessageId = m.Id.ToString(),
                     SenderId = m.SenderId,
                     ReceiverId = m.ReceiverId,
                     Content = m.Content,
@@ -80,12 +89,10 @@ namespace GrpcMongoMessagingService.Services
                     IsRead = m.IsRead
                 }).ToList();
 
-                return new RetrieveMessagesResponse { Messages = { messages } };
-            } catch (Exception ex) // It's a good idea to catch potential exceptions for better error handling.
+                return new RetrieveMessagesResponse { Messages = { grpcMessages } };
+            } catch (Exception ex)
             {
-                // Log the exception here if you have logging set up.
-                // For this example, I'm returning an empty response.
-                // Depending on your use case, you may want to handle this differently.
+                // Handle exceptions and logging
                 return new RetrieveMessagesResponse();
             }
         }

@@ -62,6 +62,7 @@
 
         if (response.IsSuccessStatusCode)
         {
+            StateHasChanged();
             MudDialog.Close(DialogResult.Ok(true));
         } else
         {
