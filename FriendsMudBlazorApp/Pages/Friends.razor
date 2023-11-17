@@ -19,6 +19,7 @@
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton Color="Color.Primary" OnClick="@(() => GoToProfile(friend.Username))">View Profile</MudButton>
+                    <MudButton Color="Color.Primary" OnClick="@(() => MessageFriend(friend.UserId))">Message Friend</MudButton>
                 </MudCardActions>
             </MudCard>
             <MudDivider />
@@ -93,5 +94,10 @@
     private void GoToProfile(string username)
     {
         Navigation.NavigateTo($"/profile/{username}");
+    }
+
+    private void MessageFriend(string userId)
+    {
+        Navigation.NavigateTo($"/message/{userId}");
     }
 }

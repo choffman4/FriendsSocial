@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using FriendsMudBlazorApp.Services;
+using System.Threading.Tasks;
 
 namespace FriendsMudBlazorApp.Hubs
 {
@@ -14,26 +15,46 @@ namespace FriendsMudBlazorApp.Hubs
             _logger = logger;
         }
 
-        public async Task SendMessage(string senderId, string receiverId, string messageContent)
+        public async Task SendMessage(string senderId, string receiverId, string groupId, string messageContent)
         {
-            _logger.LogInformation($"Attempting to send message from {senderId} to {receiverId}");
-
             var saveResponse = await _messagingService.SendMessageAsync(senderId, receiverId, messageContent);
 
-            _logger.LogInformation($"Message save response: {saveResponse.Status}");
+            Message message = new Message();
+            message.SenderId = senderId;
+            message.ReceiverId = receiverId;
+            message.Content = messageContent;
+            message.Timestamp = DateTime.UtcNow;
 
             if (saveResponse.Status == "Success")
             {
-                var message = new { /* ... */ };
-                _logger.LogInformation($"Sending to {senderId}");
-                await Clients.User(senderId).SendAsync("ReceiveMessage", senderId, message);
-
-                _logger.LogInformation($"Sending to {receiverId}");
-                await Clients.User(receiverId).SendAsync("ReceiveMessage", senderId, message);
+                // Send the message to the group
+                await Clients.Group(groupId).SendAsync("ReceiveMessage", senderId, message);
             } else
             {
                 _logger.LogWarning($"Failed to send message: {saveResponse.Status}");
             }
+        }
+
+        public async Task JoinGroup(string groupId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
+            _logger.LogInformation($"User {Context.ConnectionId} joined group {groupId}");
+        }
+
+        public async Task LeaveGroup(string groupId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
+            _logger.LogInformation($"User {Context.ConnectionId} left group {groupId}");
+        }
+
+        // Optional: Override OnConnectedAsync and OnDisconnectedAsync if you need to perform any specific logic when a user connects or disconnects
+        public class Message
+        {
+            public string SenderId { get; set; }
+            public string ReceiverId { get; set; }
+            public string Content { get; set; }
+            public DateTime Timestamp { get; set; }
+            public bool IsRead { get; set; }
         }
     }
 }

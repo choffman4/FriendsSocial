@@ -18,6 +18,11 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
     <PackageReference Include="MySql.Data" Version="8.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.3" />
+	  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+	  <PackageReference Include="Steeltoe.Discovery.ClientCore" Version="3.2.3" />
+	  <PackageReference Include="Steeltoe.Discovery.Eureka" Version="3.2.3" />
   </ItemGroup>
 
 </Project>

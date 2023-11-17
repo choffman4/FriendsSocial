@@ -15,7 +15,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudDrawer Open="true" Anchor="Anchor.Left" Elevation="0" Variant="@DrawerVariant.Persistent"
+    <MudDrawer @bind-Open="drawerOpen" Variant="@DrawerVariant.Mini" Anchor="Anchor.Left" Elevation="0" OpenMiniOnHover="true"
                Color="@Color.Primary" Width="300px">
         <MudDrawerHeader>
             <MudButton Size="Size.Large" Variant="Variant.Text">friends</MudButton>
@@ -43,6 +43,8 @@
 
 @code {
     Profile userProfile = new Profile();
+
+    private bool drawerOpen = true;
 
     public class Profile
     {
@@ -108,11 +110,31 @@
 
     private async Task<Profile> GetProfileAsync(string userGuid)
     {
-        var response = await Http.GetAsync($"http://localhost:8002/profile/userid/{userGuid}");
+        // Construct the full URL to go through the API gateway
+        var url = $"http://localhost:8000/profile/userid/{userGuid}";
+
+        // Create a new HttpRequestMessage
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        // Retrieve the bearer token from local storage
+        var token = await LocalStorage.GetItemAsync<string>("token");
+
+        // Check if the token exists before attaching it to the header
+        if (!string.IsNullOrEmpty(token))
+        {
+            // Add the Authorization header with the bearer token
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        // Send the request
+        var response = await Http.SendAsync(request);
+
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<Profile>();
         }
+
         return null; // handle the error appropriately
     }
+
 }

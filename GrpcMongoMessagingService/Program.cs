@@ -1,6 +1,7 @@
 using GrpcMongoMessagingService.Services;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
+using Steeltoe.Discovery.Client;
 
 namespace GrpcMongoMessagingService
 {
@@ -17,6 +18,8 @@ namespace GrpcMongoMessagingService
             builder.Services.AddGrpc();
             builder.Services.AddSingleton<MongoClientSettings>(s =>
                 MongoClientSettings.FromConnectionString(builder.Configuration.GetConnectionString("MongoDb")));
+
+            builder.Services.AddDiscoveryClient(builder.Configuration);
 
             var app = builder.Build();
 

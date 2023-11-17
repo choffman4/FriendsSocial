@@ -9,6 +9,11 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.57.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.3" />
+	  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+	  <PackageReference Include="Steeltoe.Discovery.ClientCore" Version="3.2.3" />
+	  <PackageReference Include="Steeltoe.Discovery.Eureka" Version="3.2.3" />
   </ItemGroup>
 
 	<ItemGroup>

@@ -5,7 +5,7 @@ using GrpcMongoFriendService;
 
 namespace UserFriendsService.Controllers
 {
-    [Route("friend")]
+    [Route("friends")]
     [ApiController]
     public class FriendController : Controller
     {

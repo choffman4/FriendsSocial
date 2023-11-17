@@ -1,4 +1,5 @@
 using GrpcMongoPostingService.Services;
+using Steeltoe.Discovery.Client;
 
 namespace GrpcMongoPostingService
 {
@@ -14,7 +15,10 @@ namespace GrpcMongoPostingService
             // Add services to the container.
             builder.Services.AddGrpc();
 
+            builder.Services.AddDiscoveryClient(builder.Configuration);
+
             var app = builder.Build();
+
 
             // Configure the HTTP request pipeline.
             app.MapGrpcService<PostGrpcService>();

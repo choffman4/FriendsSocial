@@ -2,6 +2,7 @@
 @layout AuthLayout
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
 
 <RightDrawer />
 <SearchBar />
@@ -45,20 +46,35 @@
 
     private async Task LoadUsers(string searchTerm)
     {
-        // Assuming you have a base URL configured for your HttpClient
-        var response = await Http.GetFromJsonAsync<List<UserProfile>>($"http://localhost:8002/profile/search/{searchTerm}");
+        string url = $"http://localhost:8000/profile/search/{searchTerm}";
 
-        if (response != null)
+        // Retrieve the bearer token from local storage
+        var token = await LocalStorage.GetItemAsync<string>("token");
+
+        // Create the request message with the required headers
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+        if (!string.IsNullOrEmpty(token))
         {
-            users = response;
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        // Send the request and get the response
+        var response = await Http.SendAsync(requestMessage);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Read the response as JSON and deserialize it to the List<UserProfile> type
+            users = await response.Content.ReadFromJsonAsync<List<UserProfile>>();
         } else
         {
             users = new List<UserProfile>();
+            // Optionally, handle different HTTP status codes or errors here
         }
 
         // Request the UI to be re-rendered
         StateHasChanged();
     }
+
 
     public class UserProfile
     {

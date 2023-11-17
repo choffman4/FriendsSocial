@@ -30,19 +30,14 @@ internal class Program
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidateLifetime = false,
+                    ValidateLifetime = true,
                     ValidateIssuerSigningKey = true
                 };
             });
 
-        //builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-        //.AddCookie(options =>
-        //{
-        //    options.Cookie.HttpOnly = true;
-        //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        //    options.Cookie.Name = "YourCookieName";
-        //    options.ExpireTimeSpan = TimeSpan.FromHours(1);
-        //});
+
+        builder.Services.AddDiscoveryClient(builder.Configuration);
+
 
         builder.Services.AddAuthorization();
 
@@ -50,8 +45,6 @@ internal class Program
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-
-        //builder.Services.AddDiscoveryClient(builder.Configuration);
 
         var app = builder.Build();
 

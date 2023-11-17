@@ -70,8 +70,6 @@ services:
       context: ./GrpcSqlUserService
       dockerfile: Dockerfile
     container_name: grpc_sql_user_account_service
-    ports:
-      - "8080:80"
     depends_on: 
         - kafka
     networks:
@@ -82,8 +80,8 @@ services:
       context: ./UserAccountService
       dockerfile: Dockerfile
     container_name: user_account_service_api
-    ports:
-      - "8000:80"
+    #ports:
+    #  - "7999:80"
     networks:
       - friends
 
@@ -92,8 +90,6 @@ services:
       context: ./GrpcMongoProfileService
       dockerfile: Dockerfile
     container_name: grpc_mongo_profile_service
-    ports:
-      - "8004:80"
     networks:
       - friends
 
@@ -102,8 +98,6 @@ services:
       context: ./GrpcMongoFriendsService
       dockerfile: Dockerfile
     container_name: grpc_mongo_friend_service
-    ports:
-      - "8005:80"
     networks:
       - friends
 
@@ -112,8 +106,6 @@ services:
       context: ./GrpcMongoPostingService
       dockerfile: Dockerfile
     container_name: grpc_mongo_posting_service
-    ports:
-      - "8001:80"
     networks:
       - friends
 
@@ -122,8 +114,6 @@ services:
       context: ./GrpcMongoMessagingService
       dockerfile: Dockerfile
     container_name: grpc_mongo_messaging_service
-    ports:
-      - "8008:80"
     networks:
       - friends
 
@@ -132,8 +122,8 @@ services:
       context: ./ProfileService
       dockerfile: Dockerfile
     container_name: profile_service_api
-    ports:
-      - "8002:80"
+    #ports:
+    #  - "8002:80"
     networks:
       - friends
 
@@ -142,8 +132,8 @@ services:
       context: ./PostingService
       dockerfile: Dockerfile
     container_name: posting_service_api
-    ports:
-      - "8006:80"
+    #ports:
+    #  - "8006:80"
     networks:
       - friends
 
@@ -152,8 +142,8 @@ services:
       context: ./UserFriendsService
       dockerfile: Dockerfile
     container_name: friend_service_api
-    ports:
-      - "8007:80"
+    #ports:
+    #  - "8007:80"
     networks:
       - friends
 
@@ -164,20 +154,41 @@ services:
     container_name: mongo_kafka_consumer_service
     depends_on:
       - kafka
-    ports:
-      - "8003:80"
     networks:
       - friends
 
-  #blazor-app:
-  #  build:
-  #    context: ./FriendsBlazorApp
-  #    dockerfile: Dockerfile
-  #  container_name: friends_blazor_app
-  #  ports: 
-  #   - "8999:80"
-  #  networks:
-  #    - friends
+  ocelot-gateway:
+    build:
+      context: ./OcelotGateway
+      dockerfile: Dockerfile
+    container_name: ocelot_gateway
+    restart: always
+    hostname: ocelot_gateway
+    ports:
+      - "8000:80"  # Expose the gateway on port 8000 on the host and map to port 80 in the container
+    networks:
+      - friends
+    #depends_on:
+    #  - grpc-sql-user-account-service
+    #  - user-account-service-api
+    #  - grpc-mongo-profile-service
+    #  - grpc-mongo-friend-service
+    #  - grpc-mongo-posting-service
+    #  - grpc-mongo-messaging-service
+    #  - profile-service-api
+    #  - posting-service-api
+    #  - friend-service-api
+    #  - mongo-kafka-consumer-service
+
+  eureka-server:
+    container_name: eureka_server
+    image: steeltoeoss/eureka-server:latest
+    restart: always
+    hostname: EurekaServer
+    ports:
+      - 8761:8761
+    networks:
+      - friends
 
 volumes:
   mysql_data:

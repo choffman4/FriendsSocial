@@ -40,3 +40,8 @@ window.detectScrollBottom = (dotNetHelper) => {
     // Add the new event listener
     window.addEventListener('scroll', debouncedOnScroll);
 };
+
+function scrollToBottom(id) {
+    var element = document.getElementById(id);
+    element.scrollTop = element.scrollHeight;
+}

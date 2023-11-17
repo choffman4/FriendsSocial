@@ -55,7 +55,7 @@
 
     private async Task LogIn()
     {
-        string url = "http://localhost:8000/users/login";
+        string url = "http://localhost:8000/user/login";
 
         var response = await Http.PostAsJsonAsync(url, loginModel);
 

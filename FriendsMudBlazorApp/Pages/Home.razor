@@ -12,8 +12,9 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 
-<RightDrawer />
 <SearchBar />
+<RightDrawer />
+
 
 <MudContainer Style="padding-top: 64px; padding-right: 200px">
     <MudTable Items="_posts" Breakpoint="Breakpoint.Sm" Virtualize="true" FixedHeader="true">
@@ -92,8 +93,9 @@
 
         try
         {
+            var token = await LocalStorage.GetItemAsync<string>("token");
             var userId = await LocalStorage.GetItemAsync<string>("userGuid");
-            var requestUri = "http://localhost:8006/post/GetPosts";
+            var requestUri = "http://localhost:8000/post/GetPosts";
 
             var request = new HttpRequestMessage
                 {
@@ -107,6 +109,8 @@
                         limit = 4
                     })
                 };
+
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
             var response = await Http.SendAsync(request);
             if (response.IsSuccessStatusCode)

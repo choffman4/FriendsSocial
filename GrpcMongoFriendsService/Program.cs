@@ -1,5 +1,10 @@
 using GrpcMongoFriendsService.Services;
 
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Steeltoe.Discovery.Client;
+
 namespace GrpcMongoFriendsService
 {
     public class Program
@@ -13,6 +18,7 @@ namespace GrpcMongoFriendsService
 
             // Add services to the container.
             builder.Services.AddGrpc();
+            builder.Services.AddDiscoveryClient(builder.Configuration);
 
             var app = builder.Build();
 

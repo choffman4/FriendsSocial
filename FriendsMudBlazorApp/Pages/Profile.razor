@@ -114,6 +114,7 @@
         {
             var senderId = await LocalStorage.GetItemAsync<string>("userGuid");
             var receiverId = userProfile.UserId;
+            var token = await LocalStorage.GetItemAsync<string>("token"); // retrieve the token
 
             var friendRequest = new
             {
@@ -123,7 +124,18 @@
 
             var content = new StringContent(JsonSerializer.Serialize(friendRequest), Encoding.UTF8, "application/json");
 
-            var response = await Http.PostAsync("http://localhost:8007/friend/SendFriendRequest", content);
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8000/friend/SendFriendRequest")
+                {
+                    Content = content
+                };
+
+            // Add bearer token to the authorization header of the request
+            if (!string.IsNullOrEmpty(token))
+            {
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var response = await Http.SendAsync(requestMessage);
 
             if (response.IsSuccessStatusCode)
             {
@@ -139,8 +151,6 @@
             // Log the exception or notify the user
         }
     }
-
-
 
     protected override async Task OnParametersSetAsync()
     {

@@ -5,7 +5,7 @@ using PostingService.Post;
 
 namespace PostingService.Controllers
 {
-    [Route("post")]
+    [Route("posts")]
     [ApiController]
     public class PostController : ControllerBase
     {

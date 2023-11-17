@@ -1,0 +1,250 @@
+﻿@page "/message/{FriendGuid}"
+@layout AuthLayout
+@inject Services.MessagingServiceClientWrapper MessagingService
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
+
+
+
+@using Microsoft.AspNetCore.SignalR.Client
+
+<RightDrawer />
+<SearchBar />
+
+<MudContainer Style="padding-top: 64px; padding-right: 200px">
+    <MudText Typo="Typo.h5" Class="friend-name">@($"{friend?.FirstName} {friend?.LastName}")</MudText>
+        <div class="message-list" id="message-list">
+            @foreach (var message in messages)
+        {
+            <div class="@GetMessageStyle(message)">
+                <div class="message-content">
+                    <span>@message.Content</span>
+                    <small class="message-date">@message.Timestamp.ToString("g")</small>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="message-input">
+        <MudTextField @bind-Value="newMessage" FullWidth="true" Placeholder="Type a message..."/>
+        <MudButton Color="Color.Primary" OnClick="SendMessage">Send</MudButton>
+    </div>
+</MudContainer>
+
+<style>
+    .friend-name {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .message-content {
+        display: inline-block;
+        padding: 10px 20px; /* Adjust padding as needed */
+        border-radius: 25px; /* This will give a pill-like shape */
+        max-width: 60%;
+        margin-bottom: 5px;
+        word-wrap: break-word; /* Ensure long words don't break the pill shape */
+    }
+
+    .message-date {
+        display: block;
+        text-align: right;
+        font-size: 0.75rem;
+        margin-top: 3px; /* Space between message and timestamp */
+    }
+
+    .sent-message,
+    .received-message {
+        margin-bottom: 15px; /* Adds padding between messages */
+        clear: both; /* Ensures that floating elements don't overlap */
+    }
+
+        .sent-message .message-content {
+            background-color: blue;
+            color: white;
+            float: right; /* Aligns sent message to the right */
+        }
+
+        .received-message .message-content {
+            background-color: gray;
+            color: black;
+            float: left; /* Aligns received message to the left */
+        }
+
+    .message-list {
+        overflow-y: auto; /* Allows scrolling */
+        height: calc(100vh - 120px); /* Adjust 120px to account for other UI elements */
+        padding: 10px;
+    }
+
+    .message-input {
+        position: sticky;
+        bottom: 0;
+        padding: 10px;
+        background: white;
+        z-index: 1000; /* Ensures it sits above other elements */
+    }
+
+    /* Ensure that the box-sizing property is set to border-box */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+
+    /* Additional styles */
+</style>
+
+@code {
+    [Parameter]
+    public string FriendGuid { get; set; }
+
+    private Friend friend;
+
+    private string UserGuid;
+    private List<MessageObject> messages = new List<MessageObject>();
+    private string newMessage;
+    private string groupId;
+
+    private string previousFriendGuid;
+
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserGuid = await LocalStorage.GetItemAsync<string>("userGuid");
+        previousFriendGuid = FriendGuid;
+
+        friend = await GetFriendDetails(FriendGuid);
+
+        // Create a group ID
+        groupId = CreateGroupId(UserGuid, FriendGuid);
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/messagehub"))
+            .Build();
+
+        hubConnection.On<string, MessageObject>("ReceiveMessage", (user, message) =>
+        {
+            messages.Add(message); // Append new message to the list
+
+            // Invoke StateHasChanged on the UI thread to update the UI
+            InvokeAsync(async () =>
+            {
+                StateHasChanged();
+                await ScrollToBottom();
+            });
+        });
+
+        await hubConnection.StartAsync();
+
+        // Join the group
+        await hubConnection.InvokeAsync("JoinGroup", groupId);
+
+        await LoadMessages(); // This will sort the existing messages
+    }
+
+    private string CreateGroupId(string userGuid, string friendGuid)
+    {
+        // Remove dashes from GUIDs and concatenate
+        var combined = string.Concat(userGuid.Replace("-", ""), friendGuid.Replace("-", ""));
+
+        // Convert to char array and sort to ensure consistent order regardless of who initiates
+        var chars = combined.ToCharArray();
+        Array.Sort(chars);
+
+        // Return as new string
+        return new string(chars);
+    }
+
+    private async Task<Friend> GetFriendDetails(string friendGuid)
+    {
+        try
+        {
+            // Replace with your actual HTTP client call to the API
+            // This is just a placeholder for illustration
+            var response = await Http.GetFromJsonAsync<Friend>($"http://localhost:8002/profile/userid/{friendGuid}");
+            return response ?? new Friend();
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving friend details: {ex.Message}");
+            return new Friend();
+        }
+    }
+
+
+    private async Task LoadMessages()
+    {
+        var grpcMessages = await MessagingService.RetrieveMessagesAsync(UserGuid, FriendGuid);
+
+        messages = grpcMessages.Select(grpcMsg => new MessageObject
+            {
+                SenderId = grpcMsg.SenderId,
+                ReceiverId = grpcMsg.ReceiverId,
+                Content = grpcMsg.Content,
+                Timestamp = DateTime.Parse(grpcMsg.Timestamp),
+                IsRead = grpcMsg.IsRead
+            })
+        .OrderBy(m => m.Timestamp) // Sort messages once when loading
+        .ToList();
+
+        StateHasChanged(); // No need for InvokeAsync here since we are already on the UI thread
+    }
+
+    // Modify SendMessage to use the SignalR hub
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrEmpty(newMessage))
+        {
+            if (hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.SendAsync("SendMessage", UserGuid, FriendGuid, groupId, newMessage);
+            } else
+            {
+                Console.WriteLine($"Hub connection is not connected: {hubConnection.State}");
+                // Attempt to reconnect or handle accordingly
+            }
+            newMessage = string.Empty;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    public bool IsConnected =>
+        hubConnection?.State == HubConnectionState.Connected;
+
+    private string GetMessageStyle(MessageObject message)
+    {
+        return message.SenderId == UserGuid ? "sent-message" : "received-message";
+    }
+
+
+    public class MessageObject
+    {
+        public string SenderId { get; set; }
+        public string ReceiverId { get; set; }
+        public string Content { get; set; }
+        public DateTime Timestamp { get; set; }
+        public bool IsRead { get; set; }
+    }
+
+    public class Friend
+    {
+        public string username { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+
+    private async Task ScrollToBottom()
+    {
+        await JsRuntime.InvokeVoidAsync("scrollToBottom", "message-list");
+    }
+
+}

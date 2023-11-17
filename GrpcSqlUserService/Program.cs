@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using GrpcSqlUserService.Kafka;
 using GrpcSqlUserService.Services;
+using Steeltoe.Discovery.Client;
 
 namespace GrpcSqlUserService
 {
@@ -21,6 +22,8 @@ namespace GrpcSqlUserService
             var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka")["BootstrapServers"];
             builder.Services.AddGrpc();
             builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
+
+            builder.Services.AddDiscoveryClient(builder.Configuration);
 
             var app = builder.Build();
             var logger = app.Services.GetRequiredService<ILogger<Program>>();

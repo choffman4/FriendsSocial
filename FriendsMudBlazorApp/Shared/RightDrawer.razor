@@ -1,6 +1,10 @@
-﻿<MudDrawer Open="true" Anchor="Anchor.Right" Elevation="0" Variant="@DrawerVariant.Persistent"
+﻿<MudDrawer @bind-Open="drawerOpen" Variant="@DrawerVariant.Mini" Anchor="Anchor.Right" Elevation="0" OpenMiniOnHover="true"
            Color="@Color.Primary" Width="300px">
     <MudDrawerHeader>
         <MudButton Size="Size.Large" Variant="Variant.Text">friends</MudButton>
     </MudDrawerHeader>
 </MudDrawer>
+
+@code {
+    private bool drawerOpen = true;
+}

@@ -2,6 +2,7 @@ using GrpcMongoProfileService.Kafka;
 using GrpcMongoProfileService.Services;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
+using Steeltoe.Discovery.Client;
 
 namespace GrpcMongoProfileService
 {
@@ -21,6 +22,8 @@ namespace GrpcMongoProfileService
 
             // Register the IMongoDatabase as a singleton service
             builder.Services.AddSingleton(mongoDatabase);
+
+            builder.Services.AddDiscoveryClient(builder.Configuration);
 
             var app = builder.Build();
             var logger = app.Services.GetRequiredService<ILogger<Program>>();

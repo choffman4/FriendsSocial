@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 
 
-[Route("profile")]
+[Route("profiles")]
 [ApiController]
 public class ProfileController : ControllerBase
 {

@@ -1,0 +1,88 @@
+﻿{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/users/reset-password",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/user/reset-password",
+      "UpstreamHttpMethod": [ "Post" ],
+      "ServiceName": "user-account-service-api",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/users/deactivate",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/user/deactivate",
+      "UpstreamHttpMethod": [ "Post" ],
+      "ServiceName": "user-account-service-api",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/users/register",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/user/register",
+      "UpstreamHttpMethod": [ "Post" ],
+      "ServiceName": "user-account-service-api"
+    },
+    {
+      "DownstreamPathTemplate": "/users/login",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/user/login",
+      "UpstreamHttpMethod": [ "Post" ],
+      "ServiceName": "user-account-service-api"
+    },
+    {
+      "DownstreamPathTemplate": "/users/exists",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/user/exists",
+      "UpstreamHttpMethod": [ "Get" ],
+      "ServiceName": "user-account-service-api"
+    },
+    {
+      "DownstreamPathTemplate": "/profiles/{everything}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/profile/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "ServiceName": "profile-service-api",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/posts/{everything}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/post/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "ServiceName": "posting-service-api",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/friends/{everything}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/friend/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "ServiceName": "friend-service-api",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:8000",
+    "ServiceDiscoveryProvider": {
+      "Host": "eureka-server",
+      "Port": 8761,
+      "Type": "Eureka"
+    }
+  }
+}

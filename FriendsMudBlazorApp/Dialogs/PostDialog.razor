@@ -56,9 +56,24 @@
     private async Task Post()
     {
 
-        string url = "http://localhost:8006/post/CreatePost";
+        string url = "http://localhost:8000/post/CreatePost";
 
-        var response = await Http.PostAsJsonAsync(url, pModel);
+        var token = await LocalStorage.GetItemAsync<string>("token");
+
+        // Create a new HttpRequestMessage for the POST request
+        using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContent.Create(pModel) // Assuming pModel is your post model
+            };
+
+        // Add the Authorization header with the bearer token if it exists
+        if (!string.IsNullOrEmpty(token))
+        {
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        // Send the request
+        var response = await Http.SendAsync(request);
 
         if (response.IsSuccessStatusCode)
         {
