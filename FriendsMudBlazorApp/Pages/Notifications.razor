@@ -1,7 +1,7 @@
 ﻿@page "/notifications"
 
 @layout AuthLayout
-
+@attribute [Authorize]
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService LocalStorage
 @inject HttpClient Http

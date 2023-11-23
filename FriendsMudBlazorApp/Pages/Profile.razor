@@ -1,4 +1,5 @@
 ﻿@page "/profile/{UserId}"
+@attribute [Authorize]
 @layout AuthLayout
 @inject HttpClient Http
 @inject ILocalStorageService LocalStorage
@@ -175,7 +176,7 @@
     private async Task LoadUserProfile()
     {
         // The endpoint might need to be adjusted if it requires more than just the UserId
-        var response = await Http.GetFromJsonAsync<UserProfile>($"http://localhost:8002/profile/username/{UserId}");
+        var response = await Http.GetFromJsonAsync<UserProfile>($"http://localhost:8000/profile/username/{UserId}");
         if (response != null)
         {
             userProfile = response;
@@ -190,7 +191,7 @@
         HttpRequestMessage request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri($"http://localhost:8006/post/GetAllPostsByUserId"),
+                RequestUri = new Uri($"http://localhost:8000/post/GetAllPostsByUserId"),
                 Content = new StringContent(JsonSerializer.Serialize(new { userid = userProfile.UserId }), Encoding.UTF8, "application/json")
             };
 
@@ -211,7 +212,7 @@
     private async Task LoadFriends()
     {
         var userId = await LocalStorage.GetItemAsync<string>("userGuid");
-        var requestUri = "http://localhost:8007/friend/GetFriends";
+        var requestUri = "http://localhost:8000/friend/GetFriends";
 
         var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
@@ -282,7 +283,7 @@
     private async Task RemoveFriend(string selfId, string friendId)
     {
 
-        string url = "http://localhost:8007/friend/RemoveFriend";
+        string url = "http://localhost:8000/friend/RemoveFriend";
 
         var removeFriendModel = new
         {

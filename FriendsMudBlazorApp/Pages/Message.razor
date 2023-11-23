@@ -1,4 +1,5 @@
 ﻿@page "/message/{FriendGuid}"
+@attribute [Authorize]
 @layout AuthLayout
 @inject Services.MessagingServiceClientWrapper MessagingService
 @inject HttpClient Http
